@@ -125,6 +125,9 @@
     <div id="tab-content" class="tab-content">
         <!-- 工单详情-->
         <div id="detail" role="tabpanel" class="tab-pane fade in active table-responsive">
+            <div id="detail-toolbar" class="btn-group right">
+              <button id="expandAllRows" class="btn btn-default navbar-btn" type="button">展开全部</button>
+            </div>
             <table id="tb-detail" data-toggle="table" class="table table-condensed"
                    style="table-layout:inherit;word-break:break-word;overflow:hidden;text-overflow:ellipsis;"></table>
             <!--最后操作信息-->
@@ -398,6 +401,17 @@
 
     <!--按钮控制 -->
     <script>
+        // 表格展开折叠全部行
+        $("#expandAllRows").click(function () {
+            if ($(this).text() === '展开全部') {
+               $('#tb-detail').bootstrapTable('expandAllRows');
+               $(this).text('折叠全部')
+            }
+            else if ($(this).text() === '折叠全部') {
+               $('#tb-detail').bootstrapTable('collapseAllRows');
+               $(this).text('展开全部')
+            }
+        });
         var editWorkflowNname = "{{ workflow_detail.workflow_name }}";
         var editSqlContent = $("#editSqlContent").val();
         var editGroup = "{{ workflow_detail.group_name }}";
@@ -527,6 +541,7 @@
                 showToggle: false,                   //是否显示详细视图和列表视图的切换按钮
                 cardView: false,                    //是否显示详细视图
                 detailView: true,                  //是否显示父子表
+                toolbar: "#detail-toolbar",         //自定义的toolbar
                 //格式化详情
                 detailFormatter: function (index, row) {
                     var html = [];

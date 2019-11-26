@@ -134,6 +134,26 @@ def submit(request):
     """正式提交SQL, 此处生成工单"""
     sql_content = request.POST.get('sql_content').strip()
     workflow_title = request.POST.get('workflow_name')
+
+    tidx = workflow_title.find("上线单-")
+    if tidx > -1 :
+        workflow_title = workflow_title[tidx+4:]
+    tidx = workflow_title.find("运维单-")
+    if tidx > -1 :
+        workflow_title = workflow_title[tidx+4:]
+    tidx = workflow_title.find("环球云-")
+    if tidx > -1 :
+        workflow_title = workflow_title[tidx+4:]
+    tidx = workflow_title.find("云商城-")
+    if tidx > -1 :
+        workflow_title = workflow_title[tidx+4:]
+    tidx = workflow_title.find("其它系统-")
+    if tidx > -1 :
+        workflow_title = workflow_title[tidx+5:]
+    workflow_type = request.POST.get('workflow_type')
+    system_name = request.POST.get('system_name')
+    workflow_title = workflow_type + "-" + system_name + "-" + workflow_title
+
     # 检查用户是否有权限涉及到资源组等， 比较复杂， 可以把检查权限改成一个独立的方法
     group_name = request.POST.get('group_name')
     group_id = ResourceGroup.objects.get(group_name=group_name).group_id

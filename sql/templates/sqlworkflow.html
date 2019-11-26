@@ -170,8 +170,8 @@
                     formatter: function (value, row, index) {
                         var span = document.createElement('span');
                         span.setAttribute('title', value);
-                        if (value.length > 20) {
-                            span.innerHTML = "<a href=\"/detail/" + row.id + "/\">" + value.substr(0, 20) + '...';
+                        if (value.length > 30) {
+                            span.innerHTML = "<a href=\"/detail/" + row.id + "/\">" + value.substr(0, 30) + '...';
                             +"</a>";
                         } else {
                             span.innerHTML = "<a href=\"/detail/" + row.id + "/\">" + value + "</a>";

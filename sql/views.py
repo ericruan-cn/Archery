@@ -407,3 +407,12 @@ def dbaprinciples(request):
     with open(file, 'r') as f:
         md = f.read().replace('\n', '\\n')
     return render(request, 'dbaprinciples.html', {'md': md})
+
+@permission_required('sql.menu_document', raise_exception=True)
+def workflow_principles(request):
+    """SQL文档页面"""
+    #  读取MD文件
+    file = os.path.join(settings.BASE_DIR, 'docs/workflow_principles.md')
+    with open(file, 'r') as f:
+        md = f.read().replace('\n', '\\n')
+    return render(request, 'dbaprinciples.html', {'md': md})

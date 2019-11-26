@@ -9,6 +9,7 @@ import traceback
 from email import encoders
 from email.header import Header
 from email.utils import formataddr
+from email.mime.multipart import MIMEMultipart
 
 from common.config import SysConfig
 from sql.utils.ding_api import get_access_token
@@ -99,19 +100,23 @@ class MsgSender(object):
 
             # 消息内容:
             main_msg['Subject'] = Header(subject, "utf-8").encode()
-            main_msg['From'] = formataddr(["Archery 通知", self.MAIL_REVIEW_FROM_ADDR])
+            #main_msg['From'] = formataddr(["Archery 通知", self.MAIL_REVIEW_FROM_ADDR])
+            main_msg['From'] = formataddr(["SQL审核通知", self.MAIL_REVIEW_FROM_ADDR])
             main_msg['To'] = ','.join(list(set(to)))
             main_msg['Cc'] = ', '.join(str(cc) for cc in list(set(list_cc)))
             main_msg['Date'] = email.utils.formatdate()
 
-            if self.MAIL_SSL:
-                server = smtplib.SMTP_SSL(self.MAIL_REVIEW_SMTP_SERVER, self.MAIL_REVIEW_SMTP_PORT)  # 默认SSL端口是465
-            else:
-                server = smtplib.SMTP(self.MAIL_REVIEW_SMTP_SERVER, self.MAIL_REVIEW_SMTP_PORT)  # 默认端口是25
+            #if self.MAIL_SSL:
+            #    server = smtplib.SMTP_SSL(self.MAIL_REVIEW_SMTP_SERVER, self.MAIL_REVIEW_SMTP_PORT)  # 默认SSL端口是465
+            #else:
+            #    server = smtplib.SMTP(self.MAIL_REVIEW_SMTP_SERVER, self.MAIL_REVIEW_SMTP_PORT)  # 默认端口是25
 
-            # 如果提供的密码为空，则不需要登录
-            if self.MAIL_REVIEW_FROM_PASSWORD:
-                server.login(self.MAIL_REVIEW_FROM_ADDR, self.MAIL_REVIEW_FROM_PASSWORD)
+            ## 如果提供的密码为空，则不需要登录
+            #if self.MAIL_REVIEW_FROM_PASSWORD:
+            #    server.login(self.MAIL_REVIEW_FROM_ADDR, self.MAIL_REVIEW_FROM_PASSWORD)
+            
+            server = smtplib.SMTP('localhost') 
+             
             server.sendmail(self.MAIL_REVIEW_FROM_ADDR, to + list_cc, main_msg.as_string())
             server.quit()
             logger.debug(f'邮件推送成功\n消息标题:{subject}\n通知对象：{to + list_cc}\n消息内容：{body}')

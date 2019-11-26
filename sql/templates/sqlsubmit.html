@@ -25,10 +25,31 @@
                                 <input id="sql-upload" name="sql-upload" accept=".sql" type="file" class="file-loading">
                             </div>
                             <div class="form-group">
+                                <select id="workflow_type" name="workflow_type"
+                                 class="selectpicker show-tick form-control bs-select-hidden"
+                                 data-name="工单类型" data-placeholder="请选择工单类型！"
+                                 title="请选择工单类型"
+                                 data-live-search="true" required>
+                                    <option value="上线单">上线单</option>
+                                    <option value="运维单">运维单</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                            <select id="system_name" name="system_name"
+                                 class="selectpicker show-tick form-control bs-select-hidden"
+                                 data-name="业务系统" data-placeholder="请选择业务系统！"
+                                 title="请选择业务系统"
+                                 data-live-search="true" required>
+                                    <option value="环球云">环球云</option>
+                                    <option value="云商城">云商城</option>
+                                    <option value="其它系统">其它系统</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <input id="workflow_name" type="text" autocomplete="off" name="workflow_name"
                                        class="form-control"
                                        data-name="上线单名称" data-placeholder="请输入上线单名称！"
-                                       placeholder="请输入上线单名称，如:XX项目会员功能建表"
+                                       placeholder="请输入上线单名称，如:XX功能建表"
                                        required>
                             </div>
                             <div class="form-group">
