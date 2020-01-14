@@ -149,7 +149,10 @@ class OracleEngine(EngineBase):
     def filter_sql(self, sql='', limit_num=0):
         sql_lower = sql.lower()
         # 对查询sql增加limit限制
-        if re.match(r"^select", sql_lower):
+        if re.match(r"^\s*select", sql_lower):
+            #针对select count(*) from之类的SQL,不做limit限制
+            if re.match(r"^\s*select\s+count\s*\(\s*[\*|\d]\s*\)\s+from", sql_lower):
+                return sql.rstrip(';')
             if sql_lower.find(' rownum ') == -1:
                 if sql_lower.find('where') == -1:
                     return f"{sql.rstrip(';')} WHERE ROWNUM <= {limit_num}"
