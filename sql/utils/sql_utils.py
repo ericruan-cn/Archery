@@ -9,6 +9,8 @@ import re
 import xml
 import mybatis_mapper2sql
 import sqlparse
+
+from sql.engines.models import SqlItem
 from sql.utils.extract_tables import extract_tables as extract_tables_by_sql_parse
 
 __author__ = 'hhyo'
@@ -123,3 +125,142 @@ def generate_sql(text):
             row = {"sql_id": num, "sql": statement}
             rows.append(row)
     return rows
+
+
+def get_base_sqlitem_list(sql_strings):
+    """功能描述: 把参数sql_strings转变为SqlItem列表
+    :param sql_strings: sql字符串,每个SQL以分号(;)间隔。不包含plsql执行块和plsql对象定义块
+    :return: SqlItem对象列表
+    """
+    list = []
+    for statement in sqlparse.split(sql_strings):
+        statement = sqlparse.format(statement, strip_comments=True)
+        if len(statement) <= 0:
+            continue
+        item = SqlItem(statement=statement)
+        list.append(item)
+    return list
+
+
+def get_full_sqlitem_list(full_sql, db_name):
+    ''' 获取Sql对应的SqlItem列表, 包括PLSQL部分
+        PLSQL语句块由delimiter $$作为开始间隔符，以$$作为结束间隔符
+    :param full_sql: 全部sql内容
+    :return: SqlItem 列表
+    '''
+    itemList = []
+    # 检查plsql语句块的正则表达式pattern
+    # 注意：
+    # 如果把package置于package body之前，则永远不会匹配上package body
+    plsql_delimiter_regex = r'delimiter\s+\$\$'
+    plsql_objdefine_regex = r'create\s+or\s+replace\s+(function|procedure|trigger|package\s+body|package)\s+("?\w+"?\.)?"?\w+"?[\s+|\(]'
+
+    # 对象命名，两端有双引号
+    nm_regex = r'^".+"$'
+
+    content_split_list = re.split(pattern=plsql_delimiter_regex, string=full_sql, flags=re.I)
+    for content in content_split_list:
+        # 截去首尾空格和多余空字符
+        content = content.strip()
+
+        # 如果字符串长度为0,则跳过该字符串
+        if len(content) <= 0:
+            continue
+
+        # 查找是否存在delimiter $$的结束符--> $$
+        pos = content.find("$$")
+        length = len(content)
+
+        if pos > -1:
+            # 该content包含多行结束符$$
+
+            # 处理PLSQL语句块, 这里需要先去判定语句块的类型
+            plsql_area = content[0:pos].strip()
+            # 如果plsql_area字符串最后一个字符为/,则把/给去掉
+            while True:
+                if plsql_area[-1:] == '/':
+                    plsql_area = plsql_area[:-1].strip()
+                else:
+                    break
+
+            plsql_check_result = re.search(plsql_objdefine_regex, plsql_area, flags=re.I)
+
+            #  情况1：plsql block for execute
+            #  情况2：plsql block for object define
+            if plsql_check_result:
+                # 此时plsql_area为 object define plsql block
+                str_match = plsql_check_result.group()
+                str_plsql_type = plsql_check_result.groups()[0]
+
+                idx = str_match.index(str_plsql_type)
+                nm_str = str_match[idx + len(str_plsql_type):].strip()
+
+                if nm_str[-1:] == '(':
+                    nm_str = nm_str[:-1]
+                nm_list = nm_str.split('.')
+
+                if len(nm_list) > 1:
+                    # 带有属主的对象名, 形如object_owner.object_name
+
+                    # 获取object_owner
+                    if re.match(nm_regex, nm_list[0]):
+                        # object_owner两端带有双引号
+                        object_owner = nm_list[0].strip().strip('"')
+                    else:
+                        # object_owner两端不带有双引号
+                        object_owner = nm_list[0].upper().strip().strip("'")
+
+                    # 获取object_name
+                    if re.match(nm_regex, nm_list[1]):
+                        # object_name两端带有双引号
+                        object_name = nm_list[1].strip().strip('"')
+                    else:
+                        # object_name两端不带有双引号
+                        object_name = nm_list[1].upper().strip()
+                else:
+                    # 不带属主
+                    object_owner = db_name.upper()
+                    if re.match(nm_regex, nm_list[0]):
+                        # object_name两端带有双引号
+                        object_name = nm_list[0].strip().strip('"')
+                    else:
+                        # object_name两端不带有双引号
+                        object_name = nm_list[0].upper().strip()
+
+                item = SqlItem(statement=plsql_area, stmt_type='PLSQL', object_owner=object_owner,
+                               object_name=object_name)
+                itemList.append(item)
+            else:
+                # 此时plsql_area为 executable plsql block, it's ANONYMOUS
+                item = SqlItem(statement=plsql_area.strip(), stmt_type='PLSQL', object_owner=db_name.upper(),
+                               object_name='ANONYMOUS')
+                itemList.append(item)
+
+            if length > pos + 2:
+                # 以$$结尾的语句，将止步于此;  只处理$$后续的那些语句
+                # 处理第二块SQL
+                # 此时SQL为单条可执行SQL集合
+                sql_area = content[pos + 2:].strip()
+                if len(sql_area) > 0:
+                    tmp_list = get_base_sqlitem_list(sql_area)
+                    itemList.extend(tmp_list)
+        else:
+            # 不存在多行结束符$$
+            tmp_list = get_base_sqlitem_list(content)
+            itemList.extend(tmp_list)
+    return itemList
+
+
+def get_exec_sqlitem_list(reviewResult, db_name):
+    """ 根据审核结果生成新的SQL列表
+    :param reviewResult: SQL审核结果列表
+    :param db_name:
+    :return:
+    """
+    list = []
+    list.append(SqlItem(statement=f"ALTER SESSION SET CURRENT_SCHEMA = {db_name}"))
+
+    for item in reviewResult:
+        list.append(SqlItem(statement=item['sql'], stmt_type=item['stmt_type'], object_owner=item['object_owner'],
+                            object_name=item['object_name']))
+    return list

@@ -3,6 +3,23 @@
 import json
 
 
+class SqlItem:
+
+    def __init__(self, id=0, statement='', stmt_type='SQL', object_owner='', object_name=''):
+        '''
+        :param id:  SQL序号,从0开始
+        :param statement:  SQL Statement
+        :param stmt_type:  SQL类型(SQL, PLSQL), 默认为SQL
+        :param object_owner: PLSQL Object Owner
+        :param object_name: PLSQL Object Name
+        '''
+        self.id = id
+        self.statement = statement
+        self.stmt_type = stmt_type
+        self.object_owner = object_owner
+        self.object_name = object_name
+
+
 class ReviewResult:
     """审核的单条结果"""
 
@@ -20,6 +37,9 @@ class ReviewResult:
             self.stagestatus = inception_result[3] or ''
             self.errormessage = inception_result[4] or ''
             self.sql = inception_result[5] or ''
+            self.stmt_type = kwargs.get('stmt_type', 'SQL')
+            self.object_owner = kwargs.get('object_owner', '')
+            self.object_name = kwargs.get('object_name', '')
             self.affected_rows = inception_result[6] or 0
             self.sequence = inception_result[7] or ''
             self.backup_dbname = inception_result[8] or ''
@@ -34,6 +54,9 @@ class ReviewResult:
             self.stagestatus = kwargs.get('stagestatus', '')
             self.errormessage = kwargs.get('errormessage', '')
             self.sql = kwargs.get('sql', '')
+            self.stmt_type = kwargs.get('stmt_type', 'SQL')
+            self.object_owner = kwargs.get('object_owner', '')
+            self.object_name = kwargs.get('object_name', '')
             self.affected_rows = kwargs.get('affected_rows', 0)
             self.sequence = kwargs.get('sequence', '')
             self.backup_dbname = kwargs.get('backup_dbname', '')
@@ -70,7 +93,6 @@ class ReviewSet:
                 tmp_list += [r]
             else:
                 tmp_list += [r.__dict__]
-
         return json.dumps(tmp_list)
 
     def to_dict(self):

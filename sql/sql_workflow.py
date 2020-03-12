@@ -136,20 +136,20 @@ def submit(request):
     workflow_title = request.POST.get('workflow_name')
 
     tidx = workflow_title.find("上线单-")
-    if tidx > -1 :
-        workflow_title = workflow_title[tidx+4:]
+    if tidx > -1:
+        workflow_title = workflow_title[tidx + 4:]
     tidx = workflow_title.find("运维单-")
-    if tidx > -1 :
-        workflow_title = workflow_title[tidx+4:]
+    if tidx > -1:
+        workflow_title = workflow_title[tidx + 4:]
     tidx = workflow_title.find("环球云-")
-    if tidx > -1 :
-        workflow_title = workflow_title[tidx+4:]
+    if tidx > -1:
+        workflow_title = workflow_title[tidx + 4:]
     tidx = workflow_title.find("云商城-")
-    if tidx > -1 :
-        workflow_title = workflow_title[tidx+4:]
+    if tidx > -1:
+        workflow_title = workflow_title[tidx + 4:]
     tidx = workflow_title.find("其它系统-")
-    if tidx > -1 :
-        workflow_title = workflow_title[tidx+5:]
+    if tidx > -1:
+        workflow_title = workflow_title[tidx + 5:]
     workflow_type = request.POST.get('workflow_type')
     system_name = request.POST.get('system_name')
     workflow_title = workflow_type + "-" + system_name + "-" + workflow_title
@@ -371,7 +371,6 @@ def execute(request):
         # 加入执行队列
         async_task('sql.utils.execute_sql.execute', workflow_id,
                    hook='sql.utils.execute_sql.execute_callback', timeout=-1)
-
     return HttpResponseRedirect(reverse('sql:detail', args=(workflow_id,)))
 
 
