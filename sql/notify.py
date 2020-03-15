@@ -5,7 +5,7 @@ from itertools import chain
 
 from django.contrib.auth.models import Group
 from common.config import SysConfig
-from sql.models import QueryPrivilegesApply, Users, SqlWorkflow, ResourceGroup
+from sql.models import QueryPrivilegesApply, Users, SqlWorkflow, ResourceGroup, ArchiveConfig
 from sql.utils.resource_group import auth_group_users
 from common.utils.sendmsg import MsgSender
 from common.utils.const import WorkflowDict
@@ -14,6 +14,32 @@ from sql.utils.workflow_audit import Audit
 import logging
 
 logger = logging.getLogger('default')
+
+
+def __send(msg_title, msg_content, msg_to, msg_cc=None, **kwargs):
+    """
+    按照通知配置发送通知消息
+    :param msg_title: 通知标题
+    :param msg_content: 通知内容
+    :param msg_to:  通知人user list
+    :return:
+    """
+    sys_config = SysConfig()
+    msg_sender = MsgSender()
+    msg_cc = msg_cc if msg_cc else []
+    webhook_url = kwargs.get('webhook_url')
+    msg_to_email = [user.email for user in msg_to if user.email]
+    msg_cc_email = [user.email for user in msg_cc if user.email]
+    msg_to_ding_user = [user.ding_user_id for user in chain(msg_to, msg_cc) if user.ding_user_id]
+    msg_to_wx_user = [user.wx_user_id if user.wx_user_id else user.username for user in chain(msg_to, msg_cc)]
+    if sys_config.get('mail'):
+        msg_sender.send_email(msg_title, msg_content, msg_to_email, list_cc_addr=msg_cc_email)
+    if sys_config.get('ding') and webhook_url:
+        msg_sender.send_ding(webhook_url, msg_title + '\n' + msg_content)
+    if sys_config.get('ding_to_person'):
+        msg_sender.send_ding2user(msg_to_ding_user, msg_title + '\n' + msg_content)
+    if sys_config.get('wx'):
+        msg_sender.send_wx2user(msg_title + '\n' + msg_content, msg_to_wx_user)
 
 
 def notify_for_audit(audit_id, **kwargs):
@@ -29,8 +55,6 @@ def notify_for_audit(audit_id, **kwargs):
     if not sys_config.get('mail') and not sys_config.get('ding') and not wx_status:
         logger.info('未开启消息通知，可在系统设置中开启')
         return None
-
-    wx_msg_content = ''
 
     # 获取审核信息
     audit_detail = Audit.detail(audit_id=audit_id)
@@ -77,6 +101,15 @@ def notify_for_audit(audit_id, **kwargs):
         db_name = workflow_detail.db_name
         workflow_content = re.sub('[\r\n\f]{2,}', '\n',
                                   workflow_detail.sqlworkflowcontent.sql_content[0:500].replace('\r', ''))
+    elif workflow_type == WorkflowDict.workflow_type['archive']:
+        workflow_type_display = WorkflowDict.workflow_type['archive_display']
+        workflow_detail = ArchiveConfig.objects.get(pk=workflow_id)
+        instance = workflow_detail.src_instance.instance_name
+        db_name = workflow_detail.src_db_name
+        workflow_content = '''归档表：{}\n归档模式：{}\n归档条件：{}\n'''.format(
+            workflow_detail.src_table_name,
+            workflow_detail.mode,
+            workflow_detail.condition)
     else:
         raise Exception('工单类型不正确')
 
@@ -99,23 +132,6 @@ def notify_for_audit(audit_id, **kwargs):
             workflow_title,
             workflow_url,
             workflow_content)
-
-        # 企业微信消息格式
-        if wx_status:
-            wx_msg_content = "[【{}】新的工单申请（点击查看）]({})\n" \
-                             ">发起时间：<font color=\"comment\">{}</font>\n" \
-                             ">发起人：<font color=\"comment\">{}</font>\n" \
-                             ">组：<font color=\"comment\">{}</font>\n" \
-                             ">目标实例：<font color=\"comment\">{}</font>\n" \
-                             ">数据库：<font color=\"comment\">{}</font>\n" \
-                             ">审批流程：<font color=\"comment\">{}</font>\n" \
-                             ">当前审批：<font color=\"comment\">{}</font>\n" \
-                             ">工单名称：<font color=\"comment\">{}</font>\n".format(
-                workflow_type_display, workflow_url, workflow_detail.create_time.strftime('%Y-%m-%d %H:%M:%S'),
-                workflow_from, group_name, instance, db_name, workflow_auditors, current_workflow_auditors,
-                workflow_title
-            )
-
     elif status == WorkflowDict.workflow_status['audit_success']:  # 审核通过
         msg_title = "[{}]工单审核通过#{}".format(workflow_type_display, audit_id)
         # 接收人，仅发送给申请人
@@ -132,20 +148,6 @@ def notify_for_audit(audit_id, **kwargs):
             workflow_title,
             workflow_url,
             workflow_content)
-
-        if wx_status:
-            wx_msg_content = "[【{}】工单审核通过（点击查看）]({})\n" \
-                             ">发起时间：<font color=\"comment\">{}</font>\n" \
-                             ">发起人：<font color=\"comment\">{}</font>\n" \
-                             ">组：<font color=\"comment\">{}</font>\n" \
-                             ">目标实例：<font color=\"comment\">{}</font>\n" \
-                             ">数据库：<font color=\"comment\">{}</font>\n" \
-                             ">审批流程：<font color=\"comment\">{}</font>\n" \
-                             ">工单名称：<font color=\"comment\">{}</font>\n".format(
-                workflow_type_display, workflow_url, workflow_detail.create_time.strftime('%Y-%m-%d %H:%M:%S'),
-                workflow_from, group_name, instance, db_name, workflow_auditors, workflow_title
-            )
-
     elif status == WorkflowDict.workflow_status['audit_reject']:  # 审核驳回
         msg_title = "[{}]工单被驳回#{}".format(workflow_type_display, audit_id)
         # 接收人，仅发送给申请人
@@ -158,20 +160,7 @@ def notify_for_audit(audit_id, **kwargs):
             db_name,
             workflow_title,
             workflow_url,
-            workflow_audit_remark)
-
-        if wx_status:
-            wx_msg_content = "[【{}】工单被驳回（点击查看）]({})\n" \
-                             ">发起时间：<font color=\"comment\">{}</font>\n" \
-                             ">目标实例：<font color=\"comment\">{}</font>\n" \
-                             ">数据库：<font color=\"comment\">{}</font>\n" \
-                             ">工单名称：<font color=\"comment\">{}</font>\n" \
-                             ">驳回原因：<font color=\"comment\">{}</font>\n" \
-                             "提醒：此工单审核不通过，请按照驳回原因进行修改！".format(
-                workflow_type_display, workflow_url, workflow_detail.create_time.strftime('%Y-%m-%d %H:%M:%S'),
-                instance, db_name, workflow_title, workflow_audit_remark
-            )
-
+            re.sub('[\r\n\f]{2,}', '\n', workflow_audit_remark))
     elif status == WorkflowDict.workflow_status['audit_abort']:  # 审核取消，通知所有审核人
         msg_title = "[{}]提交人主动终止工单#{}".format(workflow_type_display, audit_id)
         # 接收人，发送给该资源组内对应权限组所有的用户
@@ -188,44 +177,12 @@ def notify_for_audit(audit_id, **kwargs):
             db_name,
             workflow_title,
             workflow_url,
-            workflow_audit_remark)
-
-        if wx_status:
-            wx_msg_content = "[【{}】提交人主动终止工单（点击查看）]({})\n" \
-                             ">发起时间：<font color=\"comment\">{}</font>\n" \
-                             ">发起人：<font color=\"comment\">{}</font>\n" \
-                             ">组：<font color=\"comment\">{}</font>\n" \
-                             ">目标实例：<font color=\"comment\">{}</font>\n" \
-                             ">数据库：<font color=\"comment\">{}</font>\n" \
-                             ">工单名称：<font color=\"comment\">{}</font>\n" \
-                             ">终止原因：<font color=\"comment\">{}</font>\n".format(
-                workflow_type_display, workflow_url, workflow_detail.create_time.strftime('%Y-%m-%d %H:%M:%S'),
-                workflow_from, group_name, instance, db_name, workflow_title, workflow_audit_remark
-            )
+            re.sub('[\r\n\f]{2,}', '\n', workflow_audit_remark))
     else:
         raise Exception('工单状态不正确')
 
-    # 处理接收人信息
-    msg_to_email = [user.email for user in msg_to if user.email]
-    msg_cc_email = [user.email for user in msg_cc if user.email]
-    msg_to_ding_user = [user.ding_user_id for user in chain(msg_to, msg_cc) if user.ding_user_id]
     # 发送通知
-    msg_sender = MsgSender()
-    if sys_config.get('mail'):
-        msg_sender.send_email(msg_title, msg_content, msg_to_email, list_cc_addr=msg_cc_email)
-    if sys_config.get('ding') and webhook_url:
-        msg_sender.send_ding(webhook_url, msg_title + '\n' + msg_content)
-    if sys_config.get('ding_to_person') and msg_to_ding_user:
-        msg_sender.send_ding2user(msg_to_ding_user, msg_title + '\n' + msg_content)
-    if wx_status:
-        user_list = []
-        for user in chain(msg_to, msg_cc):
-            if user.wx_user_id:
-                user_list.append(user.wx_user_id)
-            else:
-                user_list.append(user.username)
-        # user_list = [user.wx_user_id for user in msg_to if user.wx_user_id]
-        msg_sender.send_wx2user(wx_msg_content, user_list)
+    __send(msg_title, msg_content, msg_to, msg_cc, webhook_url=webhook_url)
 
 
 def notify_for_execute(workflow):
@@ -237,7 +194,6 @@ def notify_for_execute(workflow):
     # 判断是否开启消息通知，未开启直接返回
     sys_config = SysConfig()
     wx_status = sys_config.get('wx')
-    wx_msg_content = ''
 
     if not sys_config.get('mail') and not sys_config.get('ding') and not sys_config.get('ding_to_person') \
             and not wx_status:
@@ -257,46 +213,14 @@ def notify_for_execute(workflow):
         workflow.workflow_name,
         url,
         re.sub('[\r\n\f]{2,}', '\n', workflow.sqlworkflowcontent.sql_content[0:500].replace('\r', '')))
-
-    if wx_status:
-        wx_msg_content = "[工单执行完毕（点击查看）]({})\n" \
-                         ">发起人：<font color=\"comment\">{}</font>\n" \
-                         ">组：<font color=\"comment\">{}</font>\n" \
-                         ">审批流程：<font color=\"comment\">{}</font>\n" \
-                         ">工单名称：<font color=\"comment\">{}</font>\n" \
-                         ">审批流程：<font color=\"comment\">{}</font>\n".format(
-            url, workflow.engineer_display, workflow.group_name, audit_auth_group, workflow.workflow_name,
-            re.sub('[\r\n\f]{2,}', '\n', workflow.sqlworkflowcontent.sql_content[0:500].replace('\r', '')))
-
     # 邮件通知申请人，抄送DBA
     msg_to = Users.objects.filter(username=workflow.engineer)
     msg_cc = auth_group_users(auth_group_names=['DBA'], group_id=workflow.group_id)
 
-    # 处理接收人信息
-    msg_to_email = [user.email for user in msg_to if user.email]
-    msg_cc_email = [user.email for user in msg_cc if user.email]
-    msg_to_ding_user = [user.ding_user_id for user in msg_to if user.ding_user_id]
-
-    # 判断是发送钉钉还是发送邮件
-    msg_sender = MsgSender()
-    if sys_config.get('mail'):
-        msg_sender.send_email(msg_title, msg_content, msg_to_email, list_cc_addr=msg_cc_email)
-    if sys_config.get('ding'):
-        # 钉钉通知申请人，审核人，抄送DBA
-        webhook_url = ResourceGroup.objects.get(group_id=workflow.group_id).ding_webhook
-        if webhook_url:
-            MsgSender.send_ding(webhook_url, msg_title + '\n' + msg_content)
-    if sys_config.get('ding_to_person') and msg_to_ding_user:
-        msg_sender.send_ding2user(msg_to_ding_user, msg_title + '\n' + msg_content)
-
-    if wx_status:
-        msg_to_wx_user = []
-        for user in msg_to:
-            if user.wx_user_id:
-                msg_to_wx_user.append(user.wx_user_id)
-            else:
-                msg_to_wx_user.append(user.username)
-        msg_sender.send_wx2user(wx_msg_content, msg_to_wx_user)
+    # 处理接收人
+    webhook_url = ResourceGroup.objects.get(group_id=workflow.group_id).ding_webhook
+    # 发送通知
+    __send(msg_title, msg_content, msg_to, msg_cc, webhook_url=webhook_url)
 
     # DDL通知
     if sys_config.get('ddl_notify_auth_group') and workflow.status == 'workflow_finish':
@@ -314,39 +238,20 @@ def notify_for_execute(workflow):
                 workflow.sqlworkflowcontent.sql_content[0:500])
             # 获取通知成员ddl_notify_auth_group
             msg_to = Users.objects.filter(groups__name=sys_config.get('ddl_notify_auth_group'))
-            # 处理接收人信息
-            msg_to_email = [user.email for user in msg_to]
-            msg_to_ding_user = [user.ding_user_id for user in msg_to if user.ding_user_id]
-            # 发送
-            if sys_config.get('mail') and msg_to_email:
-                msg_sender.send_email(msg_title, msg_content, msg_to_email)
-            if sys_config.get('ding_to_person') and msg_to_ding_user:
-                msg_sender.send_ding2user(msg_to_ding_user, msg_title + '\n' + msg_content)
-            if wx_status:
-                msg_to_wx_user = []
-                for user in msg_to:
-                    if user.wx_user_id:
-                        msg_to_wx_user.append(user.wx_user_id)
-                    else:
-                        msg_to_wx_user.append(user.username)
-                msg_sender.send_wx2user(wx_msg_content, msg_to_wx_user)
+            # 发送通知
+            __send(msg_title, msg_content, msg_to, msg_cc)
 
 
 def notify_for_binlog2sql(task):
     """
-    binlog2sql执行结束的通知，仅支持邮件
+    binlog2sql执行结束的通知
     :param task:
     :return:
     """
-    # 判断是否开启消息通知，未开启直接返回
-    sys_config = SysConfig()
-    if not sys_config.get('mail'):
-        logger.info('未开启消息通知，可在系统设置中开启')
-        return None
 
-    # 发送邮件通知
     if task.success:
         msg_title = '[Archery 通知]Binlog2SQL 执行结束'
         msg_content = f'解析的SQL文件为{task.result[1]}，请到指定目录查看'
-        msg_to = [task.result[0].email]
-        MsgSender().send_email(msg_title, msg_content, msg_to)
+        msg_to = [task.result[0]]
+        # 发送
+        __send(msg_title, msg_content, msg_to)

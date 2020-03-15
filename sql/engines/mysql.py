@@ -3,9 +3,11 @@ import logging
 import traceback
 import MySQLdb
 import re
+
+import schemaobject
 import sqlparse
-from MySQLdb.connections import numeric_part
 from MySQLdb.constants import FIELD_TYPE
+from schemaobject.connection import build_database_url
 
 from sql.engines.goinception import GoInceptionEngine
 from sql.utils.sql_utils import get_syntax_type, remove_comments
@@ -55,13 +57,32 @@ class MysqlEngine(EngineBase):
 
     @property
     def seconds_behind_master(self):
-        slave_status = self.query(sql='show slave status', close_conn=False)
-        return slave_status.rows[0][32] if slave_status.rows else None
+        slave_status = self.query(sql='show slave status', close_conn=False, cursorclass=MySQLdb.cursors.DictCursor)
+        return slave_status.rows[0].get('Seconds_Behind_Master') if slave_status.rows else None
 
     @property
     def server_version(self):
-        version = self.query(sql="select @@version").rows[0][0]
+        def numeric_part(s):
+            """Returns the leading numeric part of a string.
+            """
+            re_numeric_part = re.compile(r"^(\d+)")
+            m = re_numeric_part.match(s)
+            if m:
+                return int(m.group(1))
+            return None
+
+        self.get_connection()
+        version = self.conn.get_server_info()
         return tuple([numeric_part(n) for n in version.split('.')[:3]])
+
+    @property
+    def schema_object(self):
+        """获取实例对象信息"""
+        url = build_database_url(host=self.host,
+                                 username=self.user,
+                                 password=self.password,
+                                 port=self.port)
+        return schemaobject.SchemaObject(url, charset=self.instance.charset or 'utf8mb4')
 
     def kill_connection(self, thread_id):
         """终止数据库连接"""
@@ -76,7 +97,7 @@ class MysqlEngine(EngineBase):
         result.rows = db_list
         return result
 
-    def get_all_tables(self, db_name):
+    def get_all_tables(self, db_name, **kwargs):
         """获取table 列表, 返回一个ResultSet"""
         sql = "show tables"
         result = self.query(db_name=db_name, sql=sql)
@@ -84,7 +105,7 @@ class MysqlEngine(EngineBase):
         result.rows = tb_list
         return result
 
-    def get_all_columns_by_tb(self, db_name, tb_name):
+    def get_all_columns_by_tb(self, db_name, tb_name, **kwargs):
         """获取所有字段, 返回一个ResultSet"""
         sql = f"""SELECT 
             COLUMN_NAME,
@@ -105,19 +126,23 @@ class MysqlEngine(EngineBase):
         result.rows = column_list
         return result
 
-    def describe_table(self, db_name, tb_name):
+    def describe_table(self, db_name, tb_name, **kwargs):
         """return ResultSet 类似查询"""
-        sql = f"show create table {tb_name};"
+        sql = f"show create table `{tb_name}`;"
         result = self.query(db_name=db_name, sql=sql)
         return result
 
     def query(self, db_name=None, sql='', limit_num=0, close_conn=True, **kwargs):
         """返回 ResultSet """
         result_set = ResultSet(full_sql=sql)
+        max_execution_time = kwargs.get('max_execution_time', 0)
         cursorclass = kwargs.get('cursorclass') or MySQLdb.cursors.Cursor
         try:
             conn = self.get_connection(db_name=db_name)
+            conn.autocommit(True)
             cursor = conn.cursor(cursorclass)
+            if self.server_version >= (5, 7, 8) and max_execution_time:
+                cursor.execute(f"set session max_execution_time={max_execution_time};")
             effect_row = cursor.execute(sql)
             if int(limit_num) > 0:
                 rows = cursor.fetchmany(size=int(limit_num))
@@ -153,6 +178,12 @@ class MysqlEngine(EngineBase):
         if '*' in sql:
             result['has_star'] = True
             result['msg'] = 'SQL语句中含有 * '
+        # select语句先使用Explain判断语法是否正确
+        if re.match(r"^select", sql, re.I):
+            explain_result = self.query(db_name=db_name, sql=f"explain {sql}")
+            if explain_result.error:
+                result['bad_query'] = True
+                result['msg'] = explain_result.error
         return result
 
     def filter_sql(self, sql='', limit_num=0):
@@ -260,8 +291,8 @@ class MysqlEngine(EngineBase):
     def execute_workflow(self, workflow):
         """执行上线单，返回Review set"""
         # 判断实例是否只读
-        read_only = self.query(sql='select @@read_only;').rows[0][0]
-        if read_only:
+        read_only = self.query(sql='SELECT @@global.read_only;').rows[0][0]
+        if read_only in (1, 'ON'):
             result = ReviewSet(
                 full_sql=workflow.sqlworkflowcontent.sql_content,
                 rows=[ReviewResult(id=1, errlevel=2,
