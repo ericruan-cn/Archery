@@ -440,7 +440,6 @@ def execute(request):
         # 加入执行队列
         async_task('sql.utils.execute_sql.execute', workflow_id, hook='sql.utils.execute_sql.execute_callback',
                    timeout=-1, task_name=f'sqlreview-execute-{workflow_id}')
-
     return HttpResponseRedirect(reverse('sql:detail', args=(workflow_id,)))
 
 
