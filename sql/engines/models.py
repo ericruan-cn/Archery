@@ -5,18 +5,20 @@ import json
 
 class SqlItem:
 
-    def __init__(self, id=0, statement='', stmt_type='SQL', object_owner='', object_name=''):
+    def __init__(self, id=0, statement='', stmt_type='SQL', object_owner='', object_type='', object_name=''):
         '''
         :param id:  SQL序号,从0开始
         :param statement:  SQL Statement
         :param stmt_type:  SQL类型(SQL, PLSQL), 默认为SQL
         :param object_owner: PLSQL Object Owner
+        :param object_type: PLSQL Object Type
         :param object_name: PLSQL Object Name
         '''
         self.id = id
         self.statement = statement
         self.stmt_type = stmt_type
         self.object_owner = object_owner
+        self.object_type = object_type
         self.object_name = object_name
 
 
@@ -37,9 +39,6 @@ class ReviewResult:
             self.stagestatus = inception_result[3] or ''
             self.errormessage = inception_result[4] or ''
             self.sql = inception_result[5] or ''
-            self.stmt_type = kwargs.get('stmt_type', 'SQL')
-            self.object_owner = kwargs.get('object_owner', '')
-            self.object_name = kwargs.get('object_name', '')
             self.affected_rows = inception_result[6] or 0
             self.sequence = inception_result[7] or ''
             self.backup_dbname = inception_result[8] or ''
@@ -54,9 +53,6 @@ class ReviewResult:
             self.stagestatus = kwargs.get('stagestatus', '')
             self.errormessage = kwargs.get('errormessage', '')
             self.sql = kwargs.get('sql', '')
-            self.stmt_type = kwargs.get('stmt_type', 'SQL')
-            self.object_owner = kwargs.get('object_owner', '')
-            self.object_name = kwargs.get('object_name', '')
             self.affected_rows = kwargs.get('affected_rows', 0)
             self.sequence = kwargs.get('sequence', '')
             self.backup_dbname = kwargs.get('backup_dbname', '')
@@ -64,6 +60,11 @@ class ReviewResult:
             self.sqlsha1 = kwargs.get('sqlsha1', '')
             self.backup_time = kwargs.get('backup_time', '')
             self.actual_affected_rows = kwargs.get('actual_affected_rows', '')
+
+        self.stmt_type = kwargs.get('stmt_type', 'SQL')  # default is SQL
+        self.object_owner = kwargs.get('object_owner', '')  # default is ''
+        self.object_type = kwargs.get('object_type', '')  # default is ''
+        self.object_name = kwargs.get('object_name', '')  # default is ''
 
 
 class ReviewSet:

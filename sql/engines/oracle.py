@@ -243,6 +243,7 @@ class OracleEngine(EngineBase):
                                       sql=sqlitem.statement,
                                       stmt_type=sqlitem.stmt_type,
                                       object_owner=sqlitem.object_owner,
+                                      object_type=sqlitem.object_type,
                                       object_name=sqlitem.object_name,
                                       affected_rows=0,
                                       execute_time=0, )
@@ -286,7 +287,10 @@ class OracleEngine(EngineBase):
                     conn.commit()
                 rowcount = cursor.rowcount
                 stagestatus = "Execute Successfully"
-                if sqlitem.stmt_type == "PLSQL" and sqlitem.object_name:
+
+                if sqlitem.stmt_type == "PLSQL" and sqlitem.object_name and sqlitem.object_name != 'ANONYMOUS' \
+                        and sqlitem.object_name != '':
+
                     query_obj_sql = f"""SELECT OBJECT_NAME, STATUS, TO_CHAR(LAST_DDL_TIME, 'YYYY-MM-DD HH24:MI:SS') FROM ALL_OBJECTS 
                          WHERE OWNER = '{sqlitem.object_owner}' 
                          AND OBJECT_NAME = '{sqlitem.object_name}' 
@@ -296,10 +300,9 @@ class OracleEngine(EngineBase):
                     if row:
                         status = row[1]
                         if status and status == "INVALID":
-                            stagestatus = "Compile Failed！<BR>Object " + sqlitem.object_name + " is invalid<BR>ddl time " + \
-                                          row[2]
+                            stagestatus = "Compile Failed. Object " + sqlitem.object_owner + "." + sqlitem.object_name + " is invalid."
                     else:
-                        stagestatus = "Compile Failed！<BR>Object " + sqlitem.object_owner + "." + sqlitem.object_name + " doesn't exist！"
+                        stagestatus = "Compile Failed. Object " + sqlitem.object_owner + "." + sqlitem.object_name + " doesn't exist."
 
                     if stagestatus != "Execute Successfully":
                         raise Exception(stagestatus)
