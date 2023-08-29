@@ -10,7 +10,6 @@ import datetime, time
 import logging
 
 logger = logging.getLogger()
-logger = logging.getLogger("default")
 
 
 def init_logger():
