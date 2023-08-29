@@ -8,6 +8,7 @@ urlpatterns = [
     path("oidc/", include("mozilla_django_oidc.urls")),
     path("dingding/", include("django_auth_dingding.urls")),
     path("", include(("sql.urls", "sql"), namespace="sql")),
+    path("", include(("hostmgr.urls", "hostmgr"))),
 ]
 
 handler400 = views.bad_request

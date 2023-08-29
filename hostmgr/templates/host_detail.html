@@ -1,0 +1,505 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <!-- 内容区域 -->
+    <div class="content-wrapper">
+
+        <!-- 内容头部 -->
+        <section class="content-header">
+            <ol class="breadcrumb">
+                <li><a href="/"><i class="fa fa-dashboard"></i> 首页</a></li>
+                <li><a href="#">主机管理</a></li>
+                <li class="active">OS主机编辑</li>
+            </ol>
+        </section>
+        <!-- 内容头部 /-->
+
+        <!-- 正文区域 -->
+        <!-- <section class="content"> -->
+        <form id="hostForm" name="hostForm" method="post" action="/save_host/">
+            {% csrf_token %}
+
+            <!--主机信息-->
+            <!-- <div class="panel panel-default"> -->
+            {% comment %}<div class="panel-heading required">主机基础属性</div>{% endcomment %}
+            <div class="row data-type">
+                <div class="col-md-2 title">主机显示名 <span style="color: #FF0000FF;">❃</span></div>
+                <div class="col-md-2 data">
+                    <input type="hidden" id="host_id" name="host_id" value="{{ host.id }}"/>
+                    <input id="display" name="display" class="form-control" placeholder="主机显示名(必填项)"
+                           value="{{ host.display }}" maxlength="30"/>
+                </div>
+                <div class="col-md-2 title">登陆用户</div>
+                <div class="col-md-2 data">
+                    <input id="norm_username" name="norm_username" class="form-control" placeholder="登陆用户"
+                            {% if host.norm_username %} value="{{ host.norm_username }}" {% endif %}
+                           maxlength="30"/>
+                </div>
+                <div class="col-md-2 title">VIP</div>
+                <div class="col-md-2 data">
+                    <input id="vip" name="vip" class="form-control" placeholder="虚拟IP"
+                            {% if host.vip %} value="{{ host.vip }}" {% endif %} maxlength="15"/>
+                </div>
+                <div class="col-md-2 title">主机名 <span style="color: #FF0000FF;">❃</span></div>
+                <div class="col-md-2 data">
+                    <input id="hostname" name="hostname" class="form-control" placeholder="主机名(必填项)"
+                           value="{{ host.hostname }}" maxlength="30"/>
+                </div>
+                <div class="col-md-2 title">登陆密码</div>
+                <div class="col-md-2 data">
+                    <input id="norm_userpswd" name="norm_userpswd" class="form-control" placeholder="登陆密码"
+                            {% if host.norm_userpswd %} value="{{ host.norm_userpswd }}" {% endif %}
+                           maxlength="20"/>
+                </div>
+                <div class="col-md-2 title">其它IP</div>
+                <div class="col-md-2 data">
+                    <input id="otherip" name="otherip" class="form-control" placeholder="其它IP"
+                            {% if host.otherip %} value="{{ host.otherip }}" {% endif %} maxlength="100"/>
+                </div>
+                <div class="col-md-2 title">主机IP <span style="color: #FF0000FF;">❃</span></div>
+                <div class="col-md-2 data">
+                    <input id="ipaddr" name="ipaddr" class="form-control" placeholder="主机IP(必填项)"
+                           value="{{ host.ipaddr }}" maxlength="15"/>
+                </div>
+                <div class="col-md-2 title">主机类型</div>
+                <div class="col-md-2 data">
+                    <select id="hosttype" name="hosttype" class="form-control select2">
+                        <option value="">请选择</option>
+                        {% for item in hosttype_list %}
+                            <option value="{{ item.id }}"
+                                    {% if item.id == host.hosttype_id %}
+                                    selected="selected"
+                                    {% endif %}
+                            >{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 title">所属业务</div>
+                <div class="col-md-2 data">
+                    <select id="business" name="business" class="form-control select2">
+                        <option value="">请选择</option>
+                        {% for item in business_list %}
+                            <option value="{{ item.id }}"
+                                    {% if item.id == host.business_id %}
+                                    selected="selected"
+                                    {% endif %}
+                            >{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 title">SSH端口 <span style="color: #FF0000FF;">❃</span></div>
+                <div class="col-md-2 data">
+                    <input id="sshport" name="sshport" class="form-control" placeholder="SSH端口(必填项)"
+                           value="{{ host.sshport }}" maxlength="5"/>
+                </div>
+                <div class="col-md-2 title">主机状态</div>
+                <div class="col-md-2 data">
+                    <select id="hoststat" name="hoststat" class="form-control select2">
+                        <option value="">请选择</option>
+                        {% for item in hoststat_list %}
+                            <option value="{{ item.id }}"
+                                    {% if item.id == host.hoststat_id %}
+                                    selected="selected"
+                                    {% endif %}
+                            >{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 title">所属机房</div>
+                <div class="col-md-2 data">
+                    <select id="machroom" name="machroom" class="form-control select2">
+                        <option value="">请选择</option>
+                        {% for item in machroom_list %}
+                            <option value="{{ item.id }}"
+                                    {% if item.id == host.machroom_id %}
+                                    selected="selected"
+                                    {% endif %}
+                            >{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 title">ROOT密码 <span style="color: #FF0000FF;">❃</span></div>
+                <div class="col-md-2 data">
+                    <input id="rootpswd" name="rootpswd" class="form-control" placeholder="ROOT密码(必填项)"
+                           value="{{ host.rootpswd }}" maxlength="20"/>
+                </div>
+                <div class="col-md-2 title">主机规格</div>
+                <div class="col-md-2 data">
+                    <select id="hostspec" name="hostspec" class="form-control select2">
+                        <option value="">请选择</option>
+                        {% for item in hostspec_list %}
+                            <option value="{{ item.id }}"
+                                    {% if item.id == host.hostspec_id %}
+                                    selected="selected"
+                                    {% endif %}
+                            >{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 title">联系人</div>
+                <div class="col-md-2 data">
+                    <select id="contact" name="contact" class="form-control select2">
+                        <option value="">请选择</option>
+                        {% for item in contact_list %}
+                            <option value="{{ item.id }}"
+                                    {% if item.id == host.contact_id %}
+                                    selected="selected"
+                                    {% endif %}
+                            >{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 title">OS类型</div>
+                <div class="col-md-2 data">
+                    <select id="ostype" name="ostype" class="form-control select2">
+                        <option value="">请选择</option>
+                        {% for item in ostype_list %}
+                            <option value="{{ item.id }}"
+                                    {% if item.id == host.ostype_id %}
+                                    selected="selected"
+                                    {% endif %}
+                            >{{ item.osname }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 title">备注信息</div>
+                <div class="col-md-6 data">
+                            <textarea id="remark" name="remark" class="form-control" rows="1"
+                                      placeholder="备注信息">{% if host.remark %}{{ host.remark }}{% endif %}</textarea>
+                </div>
+            </div>
+            <!-- </div> -->
+
+            <!-- 主机OS用户信息 -->
+            <!-- <div class="panel panel-default"> -->
+            <div class="panel-heading required">主机OS账号</div>
+            <div class="js-inline-admin-formset inline-group panel panel-default" id="osuser_set-group"
+                 data-inline-type="tabular"
+                 data-inline-formset="{&quot;name&quot;: &quot;#osuser_set&quot;, &quot;options&quot;: {&quot;prefix&quot;: &quot;osuser_set&quot;, &quot;addText&quot;: &quot;\u6dfb\u52a0\u7528\u6237\u5bc6\u7801&quot;, &quot;deleteText&quot;: &quot;\u5220\u9664&quot;}}">
+                <!-- 添加用户密码: \u6dfb\u52a0\u7528\u6237\u5bc6\u7801 -->
+                <div class="tabular inline-related">
+
+                    {% if os_user and os_user|length > 0 %}
+                        <input id="id_osuser_set-TOTAL_FORMS" type="hidden"
+                               name="osuser_set-TOTAL_FORMS"
+                               value="{{ os_user|length }}" autocomplete="off">
+                    {% else %}
+                        <input id="id_osuser_set-TOTAL_FORMS" type="hidden"
+                               name="osuser_set-TOTAL_FORMS"
+                               value="2" autocomplete="off">
+                    {% endif %}
+
+                    <input id="id_osuser_set-MAX_NUM_FORMS" type="hidden"
+                           name="osuser_set-MAX_NUM_FORMS" value="9" autocomplete="off">
+                    <input id="id_osuser_set-INITIAL_FORMS" type="hidden"
+                           name="osuser_set-INITIAL_FORMS" value="0">
+                    <input id="id_osuser_set-MIN_NUM_FORMS" type="hidden"
+                           name="osuser_set-MIN_NUM_FORMS" value="0">
+                    <fieldset class="module ">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th class="original"></th>
+                                <th class="title">用户名称 <span style="color: #FF0000FF;">❃</span></th>
+                                <th class="title">用户密码 <span style="color: #FF0000FF;">❃</span></th>
+                                <th class="title">备注信息</th>
+                                <th class="title">删除？</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            {% if os_user and os_user|length > 0 %}
+                                {% for ou in os_user %}
+
+                                    <tr class="form-row row{% if forloop.counter|divisibleby:2 %}2{% else %}1{% endif %} dynamic-osuser_set"
+                                        id="osuser_set-{{ forloop.counter0 }}">
+                                        <td class="original">&nbsp;</td>
+                                        <td>
+                                            <input id="id_osuser_set-{{ forloop.counter0 }}-id" type="hidden"
+                                                   name="id_osuser_set-{{ forloop.counter0 }}-id"
+                                                   value="{{ ou.id }}">
+                                            <input id="id_osuser_set-{{ forloop.counter0 }}-username"
+                                                   type="text"
+                                                   class="form-control input-sm"
+                                                   name="osuser_set-{{ forloop.counter0 }}-username"
+                                                   maxlength="32"
+                                                   value="{{ ou.username }}"
+                                                   placeholder="用户名称(必填项)">
+                                        </td>
+                                        <td>
+                                            <input id="id_osuser_set-{{ forloop.counter0 }}-password"
+                                                   type="text"
+                                                   class="form-control input-sm"
+                                                   name="osuser_set-{{ forloop.counter0 }}-password"
+                                                   maxlength="32"
+                                                   value="{{ ou.password }}"
+                                                   placeholder="用户密码(必填项)">
+                                        </td>
+                                        <td>
+                                            <input id="id_osuser_set-{{ forloop.counter0 }}-remark" type="text"
+                                                   class="form-control input-sm"
+                                                   value="{{ ou.remark }}"
+                                                   name="osuser_set-{{ forloop.counter0 }}-remark"
+                                                   maxlength="64">
+                                        </td>
+                                        <td class="delete"> 清空本行进行删除</td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="form-row row1 dynamic-osuser_set" id="osuser_set-0">
+                                    <td class="original">&nbsp;</td>
+                                    <td>
+                                        <input id="id_osuser_set-0-id" type="hidden"
+                                               name="id_osuser_set-0-id"
+                                               value="0">
+                                        <input id="id_osuser_set-0-username" type="text"
+                                               class="form-control input-sm"
+                                               name="osuser_set-0-username" maxlength="32"
+                                               placeholder="用户名称(必填项)">
+                                    </td>
+                                    <td>
+                                        <input id="id_osuser_set-0-password" type="text"
+                                               class="form-control input-sm"
+                                               name="osuser_set-0-password" maxlength="32"
+                                               placeholder="用户密码(必填项)">
+                                    </td>
+                                    <td>
+                                        <input id="id_osuser_set-0-remark" type="text"
+                                               class="form-control input-sm"
+                                               name="osuser_set-0-remark" maxlength="64">
+                                    </td>
+                                    <td class="delete"></td>
+                                </tr>
+
+                                <tr class="form-row row2 dynamic-osuser_set" id="osuser_set-1">
+                                    <td class="original">&nbsp;</td>
+                                    <td>
+                                        <input id="id_osuser_set-1-id" type="hidden"
+                                               name="id_osuser_set-1-id"
+                                               value="0">
+                                        <input id="id_osuser_set-1-username" type="text"
+                                               class="form-control input-sm"
+                                               name="osuser_set-1-username"
+                                               maxlength="32" placeholder="用户名称(必填项)">
+                                    </td>
+                                    <td>
+                                        <input id="id_osuser_set-1-password" type="text"
+                                               class="form-control input-sm"
+                                               name="osuser_set-1-password"
+                                               maxlength="32" placeholder="用户密码(必填项)">
+                                    </td>
+                                    <td>
+                                        <input id="id_osuser_set-1-remark" type="text"
+                                               class="form-control input-sm"
+                                               name="osuser_set-1-remark"
+                                               maxlength="64">
+                                    </td>
+                                    <td class="delete"></td>
+                                </tr>
+                            {% endif %}
+
+                            <tr class="form-row row1 empty-form" id="osuser_set-empty">
+                                <td class="original">&nbsp;</td>
+                                <td>
+                                    <input id="id_osuser_set-__prefix__-id" type="hidden"
+                                           name="id_osuser_set-__prefix__-id"
+                                           value="0">
+                                    <input id="id_osuser_set-__prefix__-username" type="text"
+                                           class="form-control input-sm"
+                                           name="osuser_set-__prefix__-username"
+                                           maxlength="32" placeholder="用户名称(必填项)">
+                                </td>
+                                <td>
+                                    <input id="id_osuser_set-__prefix__-password" type="text"
+                                           class="form-control input-sm"
+                                           name="osuser_set-__prefix__-password"
+                                           maxlength="32" placeholder="用户密码(必填项)">
+                                </td>
+                                <td>
+                                    <input id="id_osuser_set-__prefix__-remark" type="text"
+                                           class="form-control input-sm"
+                                           name="osuser_set-__prefix__-remark"
+                                           maxlength="64">
+                                </td>
+                                <td class="delete"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </fieldset>
+                </div>
+            </div>
+            <!--数据列表/-->
+            <!-- </div> -->
+
+            <!-- 主机OS用户信息 -->
+
+            <!--工具栏-->
+            <div class="box-tools text-center">
+                <button id="btnSave" type="button" class="btn bg-purple">保存并返回</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <button type="button" class="btn bg-purple" onclick="history.back(-1);">返回前一页</button>
+            </div>
+            <br/>
+            <!--工具栏/-->
+        </form>
+
+        <!-- </section> -->
+
+        <!-- 正文区域 /-->
+    </div>
+    <!-- 内容区域 /-->
+
+{% endblock %}
+
+{% block js %}
+    {% load static %}
+
+{#    <link rel="stylesheet" type="text/css" href="{% static 'plugins/admin/css/base.css' %}">#}
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/admin/css/forms.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+
+    <script type="text/javascript" src="{% static 'plugins/admin/js/vendor/jquery/jquery.js' %}"></script>
+    <script type="text/javascript" src="{% static 'plugins/admin/js/jquery.init.js' %}"></script>
+    <script type="text/javascript" src="{% static 'plugins/admin/js/core.js' %}"></script>
+    <script type="text/javascript" src="{% static 'plugins/admin/js/inlines.js' %}"></script>
+
+    <script>
+        function validateForm() {
+            if ($("#display").val() === "") {
+                alert("请输入主机显示名！");
+                return false;
+            }
+            if ($("#hostname").val() === "") {
+                alert("请输入主机名！");
+                return false;
+            }
+            if ($("#ipaddr").val() === "") {
+                alert("请输入ip地址！");
+                return false;
+            }
+            if ($("#sshport").val() === "") {
+                alert("请输入ssh端口！");
+                return false;
+            }
+            if ($("#rootpswd").val() === "") {
+                alert("请输入主机root密码！");
+                return false;
+            }
+
+            var ou_tot = parseInt($('#id_osuser_set-TOTAL_FORMS').val());
+            var ou_pos = parseInt($('#id_osuser_set-INITIAL_FORMS').val());
+            var uname, upswd, uremk;
+            for (; ou_pos < ou_tot; ou_pos++) {
+                uname = $("#id_osuser_set-" + ou_pos + "-username").val();
+                upswd = $("#id_osuser_set-" + ou_pos + "-password").val();
+                uremk = $("#id_osuser_set-" + ou_pos + "-remark").val();
+                if ((uname == "" && upswd != "") || (uname != "" && upswd == "")) {
+                    alert("OS用户名和密码必须同时填写，或者同时清空！");
+                    return;
+                }
+                if (uname == "" && upswd == "" && uremk != "") {
+                    alert("要删除OS用户，必须清除整行内容！")
+                    return;
+                }
+            }
+            return true;
+        };
+
+        function doSubmit() {
+            var host_id = $('#host_id').val();
+            var display = $('#display').val();
+            var remark = $('#remark').val();
+            var hostname = $('#hostname').val();
+            var ipaddr = $('#ipaddr').val();
+            var sshport = $('#sshport').val();
+            var rootpswd = $('#rootpswd').val();
+            var vip = $('#vip').val();
+            var otherip = $('#otherip').val();
+            var norm_username = $('#norm_username').val();
+            var norm_userpswd = $('#norm_userpswd').val();
+            var hosttype = $('#hosttype').val();
+            var ostype = $('#ostype').val();
+            var hoststat = $('#hoststat').val();
+            var hostspec = $('#hostspec').val();
+            var business = $('#business').val();
+            var machroom = $('#machroom').val();
+
+            var ou_tot = parseInt($('#id_osuser_set-TOTAL_FORMS').val());
+            var ou_pos = parseInt($('#id_osuser_set-INITIAL_FORMS').val());
+            var uid, uname, upswd, uremk, osuser;
+            osuser = "";
+            for (; ou_pos < ou_tot; ou_pos++) {
+                uid = $("#id_osuser_set-" + ou_pos + "-id").val();
+                uname = $("#id_osuser_set-" + ou_pos + "-username").val();
+                upswd = $("#id_osuser_set-" + ou_pos + "-password").val();
+                uremk = $("#id_osuser_set-" + ou_pos + "-remark").val();
+                if (uid === "0" && uname.trim() === "" && upswd.trim() === "" && uremk.trim() === "") {
+                    continue;
+                } else {
+                    osuser += uid + "/" + uname + "/" + upswd + "/" + uremk + "|";
+                }
+            }
+            $.ajax({
+                type: "post",
+                url: "/host/save/",
+                dataType: "json",
+                data: {
+                    host_id: host_id,
+                    display: display,
+                    remark: remark,
+                    hostname: hostname,
+                    sshport: sshport,
+                    ipaddr: ipaddr,
+                    norm_username: norm_username,
+                    norm_userpswd: norm_userpswd,
+                    rootpswd: rootpswd,
+                    vip: vip,
+                    otherip: otherip,
+                    hosttype: hosttype,
+                    ostype: ostype,
+                    hoststat: hoststat,
+                    hostspec: hostspec,
+                    business: business,
+                    machroom: machroom,
+                    osuser: osuser,
+                },
+                complete: function () {
+                },
+                success: function (data) {
+                    alert(data.msg);
+                    if (data.status === 0) {
+                        window.location.href = "/host/list/";
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    if (XMLHttpRequest.responseJSON) {
+                        alert(XMLHttpRequest.responseText)
+                    } else {
+                        alert(errorThrown);
+                    }
+                }
+            });
+        }
+
+        $("#btnSave").click(function () {
+            if (validateForm()) {
+                doSubmit();
+            }
+        });
+
+        $(document).ready(function () {
+            var msg = "{{msg}}";
+            if (msg === "") {
+                $('#msg_modal').modal('hide');
+            } else {
+                $('#msg_modal').modal('show');
+            }
+        });
+
+
+    </script>
+
+
+{% endblock %}
+
+

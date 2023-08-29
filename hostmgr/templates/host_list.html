@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <!--
+    1. 这是遍历表对象列表. hosttype_list = HostType.objects.all().values('id', 'name')
+    { % for item in hosttype_list % }
+        <option value="{ { item.id }}">{ { item.name }}</option>
+    { % endfor % }
+
+    2. 这是遍历字典. hosttype_dict = { 10: 'PHY', 20: 'VM', 30: 'ECS', }
+    { % for k,v in hosttype_dict.items %}
+        <option value="{ { k }}">{ { v }}</option>
+    { % endfor %}
+
+    3. 以下是遍历二元元组list.  hosttype_list = [(10, 'PHY'),(20, 'VM'),(30, 'ECS'),]
+    { % for item in hosttype_list %}
+        <option value="{ { item.0 } }">{ { item.1 } }</option>
+    { % endfor % }
+    -->
+
+    <!-- 内容 -->
+    <!-- 内容区域 -->
+    <div class="content-wrapper">
+
+        <!-- 内容头部 -->
+        <section class="content-header">
+            <!--
+            <h1>
+                主机管理
+                <small>主机维护</small>
+            </h1>
+            -->
+            <ol class="breadcrumb">
+                <li><a href="/dashboard/"><i class="fa fa-dashboard"></i> 首页</a></li>
+                <li><a href="#">主机管理</a></li>
+                <li class="active">OS主机维护</li>
+            </ol>
+        </section>
+        <!-- 内容头部/ -->
+
+        <!-- 正文区域 -->
+        <section class="content">
+
+            <form id="hostListForm" name="hostListForm" method="post" action="/host/list/">
+                {% csrf_token %}
+                <input id="page" name="page" type="hidden" value="{{ page }}"/>
+
+                <!-- .box-body -->
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <!-- 数据表格 -->
+
+                        <div class="table-box table-responsive">
+                            <!--工具栏-->
+                            <div class="pull-left">
+                                <div class="form-group form-inline">
+                                    <div class="form-group">
+                                        <select id="ostype_id" name="ostype_id" class="form-control select2"
+                                                onchange="gotoSubmit()">
+                                            <option value="">OS类型</option>
+                                            {% for item in ostype_list %}
+                                                <option value="{{ item.id }}"
+                                                >{{ item.osname }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <select id="hosttype_id" name="hosttype_id" class="form-control select2"
+                                                onchange="gotoSubmit()">
+                                            <option value="" selected="selected">主机类型</option>
+                                            {% for item in hosttype_list %}
+                                                <option value="{{ item.id }}">{{ item.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <select id="hoststat_id" name="hoststat_id" class="form-control select2"
+                                                onchange="gotoSubmit()">
+                                            <option value="" selected="selected">主机状态</option>
+                                            {% for item in hoststat_list %}
+                                                <option value="{{ item.id }}">{{ item.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <select id="business_id" name="business_id" class="form-control select2"
+                                                onchange="gotoSubmit()">
+                                            <option value="" selected="selected">所属业务</option>
+                                            {% for item in business_list %}
+                                                <option value="{{ item.id }}">{{ item.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <select id="machroom_id" name="machroom_id" class="form-control select2"
+                                                onchange="gotoSubmit()">
+                                            <option value="" selected="selected">所属机房</option>
+                                            {% for item in machroom_list %}
+                                                <option value="{{ item.id }}">{{ item.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <select id="hostspec_id" name="hostspec_id" class="form-control select2"
+                                                onchange="gotoSubmit()">
+                                            <option value="" selected="selected">主机规格</option>
+                                            {% for item in hostspec_list %}
+                                                <option value="{{ item.id }}">{{ item.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-default " title="新建"
+                                                onclick='location.href="/host/add/"'>
+                                            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                                            新增
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="box-tools pull-right">
+                                <div class="has-feedback">
+                                    <input id="search" name="search" type="text" value="" class="form-control input-sm"
+                                           placeholder="搜索">
+                                    <span class="glyphicon glyphicon-search form-control-feedback"></span>
+                                </div>
+                            </div>
+                            <!--工具栏/-->
+
+                            <!--数据列表-->
+                            <table id="dataList" data-toggle="table"
+                                   class="table table-bordered table-striped table-hover dataTable"
+                                   style="table-layout:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+                            >
+                                <thead>
+                                <tr>
+                                    <th>ID</th>   <!--class="sorting_asc"-->
+                                    <th>显示名</th>  <!--class="sorting"-->
+                                    <th>主机名</th>
+                                    <th>IP</th>
+                                    <th>SSH端口</th>
+                                    <th>ROOT密码</th>
+                                    <th>OS类型</th>
+                                    <th>主机类型</th>
+                                    <th>主机状态</th>
+                                    <th>所属业务</th>
+                                    <th class="text-center">操作</th>
+                                    <th>备注</th>
+                                    <th>登录用户</th>
+                                    <th>登录密码</th>
+                                    <th>所属机房</th>
+                                    <th>主机规格</th>
+                                    <th>联系人</th>
+                                    <th>VIP</th>
+                                    <th>其它IP</th>
+                                    <th>修改时间</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for row in paginator.object_list %}
+                                    <tr>
+                                        <td> {{ row.id }}</td>
+                                        <td> {{ row.display }}</td>
+                                        <td> {{ row.hostname }}</td>
+                                        <td> {{ row.ipaddr }}</td>
+                                        <td> {{ row.sshport }}</td>
+                                        <td> {{ row.rootpswd }}</td>
+                                        <td> {{ row.ostype.osname }}</td>
+                                        <td>
+                                            {% for item in hosttype_list %}
+                                                {% if item.0 == row.hosttype_id %}
+                                                    {{ item.1 }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {% for item in hoststat_list %}
+                                                {% if item.0 == row.hoststat_id %}
+                                                    {{ item.1 }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td> {{ row.business.name }}</td>
+                                        <td class="text-center">
+                                            <!-- btn bg-olive btn-xs -->
+                                            <button type="button" class="btn btn-info btn-xs"
+                                                    onclick='location.href="/host/{{ row.id }}/"'>编辑
+                                            </button>
+                                        </td>
+                                        <td>
+                                            {% if row.remark %}
+                                                {{ row.remark }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.norm_username %}
+                                                {{ row.norm_username }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.norm_userpswd %}
+                                                {{ row.norm_userpswd }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.machroom.name %}
+                                                {{ row.machroom.name }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.hostspec.name %}
+                                                {{ row.hostspec.name }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.contact.name %}
+                                                {{ row.contact.name }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.vip %}
+                                                {{ row.vip }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.otherip %}
+                                                {{ row.otherip }}
+                                            {% endif %}
+                                        </td>
+                                        <!-- <td>{ { row.create_time }}</td> -->
+                                        <td> {{ row.modify_time }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            <!--数据列表-->
+                        </div>
+                        <!-- 数据表格 -->
+
+                    </div>
+                    <!-- .box-body -->
+
+                    <!-- .box-footer -->
+                    <div class="box-footer">
+                        {{ paginator.page_bar_html|safe }}
+                    </div>
+                    <!-- /.box-footer -->
+                    <br/><br/>
+
+                </div>
+            </form>
+
+        </section>
+        <!-- 正文区域 /-->
+
+    </div>
+
+
+{% endblock %}
+
+{% block js %}
+
+    <script>
+
+        $(document).ready(function () {
+            $("#per_page").val("{{ paginator.per_page }}")
+            $("#ostype_id").val("{{ param_dict.ostype_id }}")
+            $("#hosttype_id").val("{{ param_dict.hosttype_id }}")
+            $("#hoststat_id").val("{{ param_dict.hoststat_id }}")
+            $("#business_id").val("{{ param_dict.business_id }}")
+            $("#machroom_id").val("{{ param_dict.machroom_id }}")
+            $("#hostspec_id").val("{{ param_dict.hostspec_id }}")
+        });
+
+        function changePerPage(form, per_page) {
+            $("#per_page").val(per_page);
+            $("#page").val(1);
+            form.submit();
+        }
+
+        function gotoPage(page) {
+            $("#page").val(page);
+            $("#hostListForm").submit();
+        }
+
+        function gotoSubmit() {
+            $("#hostListForm").submit();
+        }
+
+        function doSearch(form) {
+            form.submit();
+        }
+
+        $(function () {
+            $('#search').keypress(function (e) {
+                var curkey = e.which;
+                if (curkey == 13) {
+                    var value = $(this).val().trim();
+                    if (length(value) > 0) {
+                        $(this.form).submit();
+                    }
+                }
+            });
+        });
+
+    </script>
+
+
+{% endblock %}
+
+

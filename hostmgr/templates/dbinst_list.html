@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <!-- 内容 -->
+    <!-- 内容区域 -->
+    <div class="content-wrapper">
+
+        <!-- 内容头部 -->
+        <section class="content-header">
+            <!--
+            <h1>
+                主机管理
+                <small>主机维护</small>
+            </h1>
+            -->
+            <ol class="breadcrumb">
+                <li><a href="/dashboard/"><i class="fa fa-dashboard"></i> 首页</a></li>
+                <li><a href="#">主机管理</a></li>
+                <li class="active">DB实例维护</li>
+            </ol>
+        </section>
+        <!-- 内容头部/ -->
+
+        <!-- 正文区域 -->
+        <section class="content">
+
+            <form id="dbinstForm" name="dbinstForm" method="post" action="/host/dbinst/list/">
+                {% csrf_token %}
+                <input id="page" name="page" type="hidden" value="{{ page }}"/>
+
+                <!-- .box-body -->
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <!-- 数据表格 -->
+
+                        <div class="table-box table-responsive">
+                            <!--工具栏-->
+                            <div class="pull-left">
+                                <div class="form-group form-inline">
+                                    <select id="dbtype_id" name="dbtype_id" class="form-control select2"
+                                            onchange="gotoSubmit(this.form)">
+                                        <option value="">DB类型</option>
+                                        {% for item in dbtype_list %}
+                                            <option value="{{ item.id }}"
+                                                    {% if item.id == dbtype_id %}
+                                                    selected="selected"
+                                                    {% endif %}
+                                            >{{ item.name }}</option>
+                                        {% endfor %}
+                                    </select>
+
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-default " title="新建"
+                                                onclick='location.href="/host/dbinst/preadd/";'>
+                                            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                                            新增
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="box-tools pull-right">
+                                <div class="has-feedback">
+                                    <input id="search" name="search" type="text" value="" class="form-control input-sm"
+                                           placeholder="搜索">
+                                    <span class="glyphicon glyphicon-search form-control-feedback"></span>
+                                </div>
+                            </div>
+                            <!--工具栏/-->
+
+                            <!--数据列表-->
+                            <table id="dataList" data-toggle="table"
+                                   class="table table-bordered table-striped table-hover dataTable"
+                                   style="table-layout:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+                            >
+                                <thead>
+                                <tr>
+                                    <th>实例ID</th>  <!--class="sorting_asc"-->
+                                    <th>DB类型</th>  <!--class="sorting"-->
+                                    <th>实例IP</th>
+                                    <th>实例端口</th>
+                                    <th>实例名</th>
+                                    <th>服务名</th>
+                                    <th>其它服务名</th>
+                                    <th>操作</th>
+                                    <th>sys密码</th>
+                                    <th>system密码</th>
+                                    <th>root密码</th>
+                                    <th>DBA用户</th>
+                                    <th>DBA密码</th>
+                                    <th>监控用户</th>
+                                    <th>监控密码</th>
+                                    <th>集群IP</th>
+                                    <th>集群端口</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for row in paginator.object_list %}
+                                    <tr>
+                                        <td> {{ row.id }}</td>
+                                        <td> {{ row.dbtype.name }}</td>
+                                        <td> {{ row.host.ipaddr }}</td>
+                                        <td> {{ row.serv_port }}</td>
+                                        <td>
+                                            {% if row.inst_name %}
+                                                {{ row.inst_name }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.serv_name %}
+                                                {{ row.serv_name }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.other_serv_name %}
+                                                {{ row.other_serv_name }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <!-- btn bg-olive btn-xs -->
+                                            <button type="button" class="btn btn-info btn-xs"
+                                                    onclick='location.href="/host/dbinst/{{ row.id }}/"'>编辑
+                                            </button>
+                                        </td>
+                                        <td>
+                                            {% if row.sys_pswd %}
+                                                {{ row.sys_pswd }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                        <td> {% if row.system_pswd %}
+                                            {{ row.system_pswd }}
+                                        {% else %}
+                                            &nbsp;
+                                        {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.root_pswd %}
+                                                {{ row.root_pswd }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.dba_acct_name %}
+                                                {{ row.dba_acct_name }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.dba_acct_pswd %}
+                                                {{ row.dba_acct_pswd }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.mon_acct_name %}
+                                                {{ row.mon_acct_name }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.mon_acct_pswd %}
+                                                {{ row.mon_acct_pswd }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                        <td>
+
+                                            {% if row.cluster_scanip %}
+                                                {{ row.cluster_scanip }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.cluster_port %}
+                                                {{ row.cluster_port }}
+                                            {% else %}
+                                                &nbsp;
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            <!--数据列表-->
+                        </div>
+                        <!-- 数据表格 -->
+                    </div>
+                    <!-- .box-body -->
+
+                    <!-- .box-footer -->
+                    <div class="box-footer">
+                        {{ paginator.page_bar_html|safe }}
+                    </div>
+                    <!-- /.box-footer -->
+                    <br/><br/>
+
+                </div>
+            </form>
+
+        </section>
+        <!-- 正文区域 /-->
+
+    </div>
+
+
+{% endblock %}
+
+{% block js %}
+
+    <script>
+
+        $(document).ready(function () {
+            $("#per_page").val("{{ paginator.per_page }}")
+            $("#dbtype_id").val("{{ param_dict.dbtype_id }}")
+        });
+
+        function changePerPage(form, per_page) {
+            $("#per_page").val(per_page);
+            $("#page").val(1);
+            form.submit();
+        }
+
+        function gotoPage(page) {
+            $("#page").val(page);
+            $("#dbinstForm").submit();
+        }
+
+        function gotoSubmit() {
+            $("#dbinstForm").submit();
+        }
+
+        function doSearch(form) {
+            form.submit();
+        }
+
+        $(function () {
+            $('#search').keypress(function (e) {
+                var curkey = e.which;
+                if (curkey == 13) {
+                    var value = $(this).val().trim();
+                    if (length(value) > 0) {
+                        $(this.form).submit();
+                    }
+                }
+            });
+        });
+
+    </script>
+
+
+{% endblock %}
+
+

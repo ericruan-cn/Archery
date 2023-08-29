@@ -97,6 +97,37 @@
                             <a href="/dashboard/"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
                         </li>
                     {% endif %}
+
+                        <li>
+                            <a href="#"><i class="fa fa-check fa-fw"></i> 主机管理<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                <li>
+                                    <a href="/host/list/">OS主机维护</a>
+                                </li>
+                                <li>
+                                    <a href="/host/osuser/list/">OS账号查询</a>
+                                </li>
+                                <!--
+                                <li>
+                                    <a href="/host/osuser/check/" target="_blank">OS账号核验(Linux)</a>
+                                </li>
+                                -->
+                                <li>
+                                    <a href="/host/osuser/async_check/" target="_blank">Linux账号核验</a>
+                                </li>
+                                <li>
+                                    <a href="/host/dbinst/list/">DB实例维护</a>
+                                </li>
+                                <li>
+                                    <a href="/host/dbuser/list/">DB账号查询</a>
+                                </li>
+                                <li>
+                                    <a href="/host/dbuser/precheck/">DB账号核验</a>
+                                </li>
+                            </ul>
+                            <!-- /.nav-second-level -->
+                        </li>
+
                     {% if perms.sql.menu_sqlcheck %}
                         <li>
                             <a href="#"><i class="fa fa-check fa-fw"></i> SQL审核<span class="fa arrow"></span></a>

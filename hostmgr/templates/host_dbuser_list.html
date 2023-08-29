@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <!-- 内容 -->
+    <!-- 内容区域 -->
+    <div class="content-wrapper">
+
+        <!-- 内容头部 -->
+        <section class="content-header">
+            <!--
+            <h1>
+                主机管理
+                <small>主机维护</small>
+            </h1>
+            -->
+            <ol class="breadcrumb">
+                <li><a href="/dashboard/"><i class="fa fa-dashboard"></i> 首页</a></li>
+                <li><a href="#">主机管理</a></li>
+                <li class="active">DB账号查询</li>
+            </ol>
+        </section>
+        <!-- 内容头部/ -->
+
+        <!-- 正文区域 -->
+        <section class="content">
+
+            <form id="hostDBUserListForm" name="hostDBUserListForm" method="post" action="/host/dbuser/list/">
+                {% csrf_token %}
+
+                <input id="page" name="page" type="hidden" value="{{ page }}"/>
+
+                <!-- .box-body -->
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <!-- 数据表格 -->
+
+                        <div class="table-box table-responsive">
+                            <!-- 工具栏 -->
+                            <div class="pull-left">
+                                <div class="form-group form-inline">
+                                    <div class="form-group">
+                                        <select id="dbtype_id" name="dbtype_id" class="form-control select2"
+                                                onchange="gotoSubmit(this.form)">
+                                            <option value="">DB类型</option>
+                                            {% for item in dbtype_list %}
+                                                <option value="{{ item.id }}"
+                                                        {% if item.id == param_dict.dbtype_id %}
+                                                        selected="selected"
+                                                        {% endif %}
+                                                >{{ item.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <select id="dbuser_type_id" name="dbuser_type_id" class="form-control select2"
+                                                onchange="gotoSubmit(this.form)">
+                                            <option value="">账号类型</option>
+                                            {% for item in dbuser_type_list %}
+                                                <option value="{{ item.0 }}"
+                                                        {% if item.0 == param_dict.dbuser_type_id %}
+                                                        selected="selected"
+                                                        {% endif %}
+                                                >{{ item.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        &nbsp;&nbsp;
+                                        <button id="filterReset_id" name="filterReset_id"
+                                                class="form-control button-form" onclick="gotoReset(this.form)"> 重置 查询
+                                        </button>
+                                        &nbsp;&nbsp;
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="box-tools pull-right">
+                                <div class="has-feedback">
+                                    <input id="search" name="search" type="text" value=""
+                                           class="form-control input-sm"
+                                           placeholder="搜索">
+                                    <span class="glyphicon glyphicon-search form-control-feedback"></span>
+                                </div>
+                            </div>
+                            <!-- 工具栏/ -->
+
+                            <!-- 数据列表 -->
+                            <table id="dataList" data-toggle="table"
+                                   class="table table-bordered table-striped table-hover dataTable"
+                                   style="table-layout:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                <thead>
+                                <tr>
+                                    <th>DB类型</th>
+                                    <th>主机IP</th>
+                                    <th>服务端口</th>
+                                    <th>服务名</th>
+                                    <th>其它服务名</th>
+                                    <th>账号类型</th>
+                                    <th>账号名称</th>
+                                    <th>账号密码</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for row in paginator.object_list %}
+                                    <tr>
+                                        <td>{{ row.dbtype_name }}</td>
+                                        <td>{{ row.ipaddr }}</td>
+                                        <td>{{ row.serv_port }}</td>
+                                        <td>{{ row.serv_name }}</td>
+                                        <td>{{ row.other_serv_name }}</td>
+                                        <td>{{ row.dbuser_type }}</td>
+                                        <td>{{ row.username }}</td>
+                                        <td>{{ row.password }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            <!-- 数据列表 -->
+                        </div>
+                        <!-- 数据表格 -->
+
+                    </div>
+                    <!-- .box-body -->
+
+                    <!-- .box-footer -->
+                    <div class="box-footer">
+                        {{ paginator.page_bar_html|safe }}
+                    </div>
+
+                    <!-- /.box-footer -->
+                    <br/><br/>
+
+                </div>
+            </form>
+
+        </section>
+        <!-- 正文区域 /-->
+
+    </div>
+
+
+{% endblock %}
+
+{% block js %}
+
+    <script>
+
+        $(document).ready(function () {
+            $("#per_page").val("{{ paginator.per_page }}");
+            $("#dbtype_id").val("{{ param_dict.dbtype_id }}");
+            $("#dbuser_type_id").val("{{ param_dict.dbuser_type_id }}");
+        });
+
+        function changePerPage(form, per_page) {
+            $("#per_page").val(per_page);
+            $("#page").val(1);
+            form.submit();
+        }
+
+        function gotoPage(page) {
+            $("#page").val(page);
+            $("#hostDBUserListForm").submit();
+        }
+
+        function gotoSubmit(form) {
+            form.submit();
+        }
+
+        function gotoReset(form) {
+            $("#page").val("1");
+            $("#dbuser_type_id").val('');
+            $("#dbtype_id").val('');
+            form.submit();
+        }
+
+        function doSearch(form) {
+            form.submit();
+        }
+
+        $(function () {
+            $('#search').keypress(function (e) {
+                var curkey = e.which;
+                if (curkey == 13) {
+                    var value = $(this).val().trim();
+                    if (length(value) > 0) {
+                        $(this.form).submit();
+                    }
+                }
+            });
+        });
+
+    </script>
+
+
+{% endblock %}
+
+

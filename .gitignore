@@ -8,9 +8,14 @@ archery/settings.py.github
 archery/settings.py.dev
 archery/settings_dev.py
 sql/migrations/
+hostmgr/migrations/
 venv
 env
+media/
+logs/
+__pycache__/
 sonar-project.properties
 .scannerwork
 .env
+.env.list
 local_settings.py

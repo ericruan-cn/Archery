@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+
+    <!-- 内容区域 -->
+    <div class="content-wrapper">
+
+        <!-- 内容头部 -->
+        <section class="content-header">
+            <ol class="breadcrumb">
+                <li><a href="/"><i class="fa fa-dashboard"></i> 首页</a></li>
+                <li><a href="#">主机管理</a></li>
+                <li class="active">DB实例新增</li>
+            </ol>
+        </section>
+        <!-- /内容头部 -->
+
+        <!-- 正文区域 -->
+        <section class="content">
+            <form id="dbinstForm" name="dbinstForm" method="post" action="/host/dbinst/add/">
+                {% csrf_token %}
+
+                <!-- DB实例属性 -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">DB实例属性</div>
+                    <div class="panel-body">
+                        <div class="col-md-1 title align-right">DB类型<span style="color: #FF0000FF;">❃</span></div>
+                        <div class="col-md-3 data">
+                            <select id="dbtype_id" name="dbtype_id" class="form-control select2" required>
+                                <option value="" selected="selected">请选择</option>
+                                {% for item in dbtype_list %}
+                                    <option value="{{ item.id }}">{{ item.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-1 title"> 服务主机 <span style="color: #FF0000FF;">❃</span></div>
+                        <div class="col-md-3 form-group">
+                            <select id="host_id" name="host_id"
+                                    class="selectpicker show-tick form-control bs-select-hidden"
+                                    data-live-search="true" required style="width: 100%">
+                                <option value="" selected="selected">请选择</option>
+                                {#                                <option selected="selected">Alabama</option>#}
+                                {#                                <option>Alaska</option>#}
+                                {#                                <option disabled="disabled">California</option>#}
+                                {#                                <option>Delaware</option>#}
+                                {#                                <option>Tennessee</option>#}
+                                {#                                <option>Texas</option>#}
+                                {#                                <option>Washington</option>#}
+                                {% for item in host_list %}
+                                    <option value="{{ item.id }}">{{ item.ipaddr }}({{ item.hostname }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-1 title"> 服务端口 <span style="color: #FF0000FF;">❃</span></div>
+                        <div class="col-md-3 form-group">
+                            <input id="serv_port" name="serv_port" class="form-control" required placeholder="服务端口"
+                                   maxlength="15"/>
+                        </div>
+
+                        <div class="col-md-1 title">实例名</div>
+                        <div class="col-md-3 form-group">
+                            <input id="inst_name" name="inst_name" class="form-control" placeholder="实例名"
+                                   maxlength="30"/>
+                        </div>
+
+                        <div class="col-md-1 title">服务名</div>
+                        <div class="col-md-3 form-group">
+                            <input id="serv_name" name="serv_name" class="form-control" placeholder="服务名"
+                                   maxlength="30"/>
+                        </div>
+
+                        <div class="col-md-1 title">其它服务名</div>
+                        <div class="col-md-3 form-group">
+                            <input id="other_serv_name" name="other_serv_name" class="form-control"
+                                   placeholder="其它服务名"
+                                   maxlength="15"/>
+                        </div>
+
+                        <div class="col-md-1 title"> sys密码</div>
+                        <div class="col-md-3 form-group">
+                            <input id="sys_pswd" name="sys_pswd" class="form-control" placeholder="sys密码"
+                                   maxlength="30"/>
+                        </div>
+
+                        <div class="col-md-1 title">集群IP</div>
+                        <div class="col-md-3 form-group">
+                            <input id="cluster_scanip" name="cluster_scanip" class="form-control"
+                                   placeholder="集群IP"
+                                   maxlength="30"/>
+                        </div>
+
+                        <div class="col-md-1 title">集群端口</div>
+                        <div class="col-md-3 form-group">
+                            <input id="cluster_port" name="cluster_port" class="form-control"
+                                   placeholder="集群端口"
+                                   maxlength="30"/>
+                        </div>
+
+
+                        <div class="col-md-1 title">system密码</div>
+                        <div class="col-md-3 form-group">
+                            <input id="system_pswd" name="system_pswd" class="form-control"
+                                   placeholder="system密码"
+                                   maxlength="15"/>
+                        </div>
+
+                        <div class="col-md-1 title"> dba账号</div>
+                        <div class="col-md-3 form-group">
+                            <input id="dba_acct_name" name="dba_acct_name" class="form-control"
+                                   placeholder="dba账号"
+                                   maxlength="30"/>
+                        </div>
+
+                        <div class="col-md-1 title"> dba密码</div>
+                        <div class="col-md-3 form-group">
+                            <input id="dba_acct_pswd" name="dba_acct_pswd" class="form-control"
+                                   placeholder="dba密码"
+                                   maxlength="15"/>
+                        </div>
+
+                        <div class="col-md-1 title">root密码</div>
+                        <div class="col-md-3 form-group">
+                            <input id="root_pswd" name="root_pswd" class="form-control" placeholder="root密码"
+                                   maxlength="10" size="10"/>
+                        </div>
+
+                        <div class="col-md-1 title"> 监控账号</div>
+                        <div class="col-md-3 form-group">
+                            <input id="mon_acct_name" name="mon_acct_name" class="form-control"
+                                   placeholder="监控账号" maxlength="30"/>
+                        </div>
+
+                        <div class="col-md-1 title"> 监控密码</div>
+                        <div class="col-md-3 form-group">
+                            <input id="mon_acct_pswd" name="mon_acct_pswd" class="form-control"
+                                   placeholder="监控密码" maxlength="30"/>
+                        </div>
+
+
+                    </div>
+                </div>
+                <!-- /DB实例属性 -->
+
+                <!-- DB实例账号 -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">DB账号列表</div>
+                    <div class="js-inline-admin-formset inline-group panel panel-default" id="dbuser_set-group"
+                         data-inline-type="tabular"
+                         data-inline-formset="{&quot;name&quot;: &quot;#dbuser_set&quot;, &quot;options&quot;: {&quot;prefix&quot;: &quot;dbuser_set&quot;, &quot;addText&quot;: &quot;\u6dfb\u52a0\u8d26\u53f7\u5bc6\u7801&quot;, &quot;deleteText&quot;: &quot;\u5220\u9664&quot;}}">
+                        <!-- 添加用户密码: \u6dfb\u52a0\u7528\u6237\u5bc6\u7801 -->
+                        <!-- 添加账号密码: \u6dfb\u52a0\u8d26\u53f7\u5bc6\u7801 -->
+                        <div class="tabular inline-related">
+                            <input id="id_dbuser_set-TOTAL_FORMS" type="hidden" name="dbuser_set-TOTAL_FORMS"
+                                   value="2" autocomplete="off">
+                            <input id="id_dbuser_set-INITIAL_FORMS" type="hidden"
+                                   name="dbuser_set-INITIAL_FORMS" value="0">
+                            <input id="id_dbuser_set-MIN_NUM_FORMS" type="hidden"
+                                   name="dbuser_set-MIN_NUM_FORMS" value="0">
+                            <input id="id_dbuser_set-MAX_NUM_FORMS" type="hidden"
+                                   name="dbuser_set-MAX_NUM_FORMS" value="9" autocomplete="off">
+                            <fieldset class="module ">
+                                <table>
+                                    <thead>
+                                    <tr>
+                                        <th class="original"></th>
+                                        <th class="title">账号名称 <span style="color: #FF0000FF;">❃</span></th>
+                                        <th class="title">账号密码 <span style="color: #FF0000FF;">❃</span></th>
+                                        <th class="title">备注信息</th>
+                                        <th class="title">删除？</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr class="form-row row1 dynamic-dbuser_set" id="dbuser_set-0">
+                                        <td class="original">&nbsp;</td>
+                                        <td>
+                                            <input id="id_dbuser_set-0-username" type="text"
+                                                   class="form-control input-sm"
+                                                   name="dbuser_set-0-username" maxlength="32"
+                                                   placeholder="账号名称(必填项)">
+                                        </td>
+                                        <td>
+                                            <input id="id_dbuser_set-0-password" type="text"
+                                                   class="form-control input-sm"
+                                                   name="dbuser_set-0-password" maxlength="32"
+                                                   placeholder="账号密码(必填项)">
+                                        </td>
+                                        <td>
+                                            <input id="id_dbuser_set-0-remark" type="text"
+                                                   class="form-control input-sm"
+                                                   name="dbuser_set-0-remark" maxlength="64">
+                                        </td>
+                                        <td class="delete"></td>
+                                    </tr>
+
+                                    <tr class="form-row row2 dynamic-dbuser_set" id="dbuser_set-1">
+                                        <td class="original">&nbsp;</td>
+                                        <td>
+                                            <input id="id_dbuser_set-1-username" type="text"
+                                                   class="form-control input-sm"
+                                                   name="dbuser_set-1-username"
+                                                   maxlength="32" placeholder="账号名称(必填项)">
+                                        </td>
+                                        <td>
+                                            <input id="id_dbuser_set-1-password" type="text"
+                                                   class="form-control input-sm"
+                                                   name="dbuser_set-1-password"
+                                                   maxlength="32" placeholder="账号密码(必填项)">
+                                        </td>
+                                        <td>
+                                            <input id="id_dbuser_set-1-remark" type="text"
+                                                   class="form-control input-sm"
+                                                   name="dbuser_set-1-remark"
+                                                   maxlength="64">
+                                        </td>
+                                        <td class="delete"></td>
+                                    </tr>
+
+                                    <tr class="form-row row1 empty-form" id="dbuser_set-empty">
+                                        <td class="original">&nbsp;</td>
+                                        <td>
+                                            <input id="id_dbuser_set-__prefix__-username" type="text"
+                                                   class="form-control input-sm"
+                                                   name="dbuser_set-__prefix__-username"
+                                                   maxlength="32" placeholder="账号名称(必填项)">
+                                        </td>
+                                        <td>
+                                            <input id="id_dbuser_set-__prefix__-password" type="text"
+                                                   class="form-control input-sm"
+                                                   name="dbuser_set-__prefix__-password"
+                                                   maxlength="32" placeholder="账号密码(必填项)">
+                                        </td>
+                                        <td>
+                                            <input id="id_dbuser_set-__prefix__-remark" type="text"
+                                                   class="form-control input-sm"
+                                                   name="dbuser_set-__prefix__-remark"
+                                                   maxlength="64">
+                                        </td>
+                                        <td class="delete"></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+                <!-- /DB实例账号 -->
+
+                <!--工具栏-->
+                <div class="box-tools text-center">
+                    <button id="btnCreate" type="button" class="btn bg-purple">新增并返回</button>
+                    <button id="btnAddNew" type="button" class="btn bg-purple">保存并添加另一个</button>
+{#                    <button type="button" class="btn bg-purple" onclick="history.back(-1);">返回</button>#}
+                     <button type="button" class="btn bg-purple" onclick="window.location.href='/host/dbinst/list/';">返回</button>
+                    <!--    window.location.href="/host/dbinst/list/"; -->
+
+                </div>
+                <!--工具栏/-->
+            </form>
+        </section>
+        <!-- /正文区域 -->
+
+    </div>
+    <!-- /内容区域-->
+
+{% endblock %}
+
+{% block js %}
+
+    {% load static %}
+
+    {#    <link rel="stylesheet" type="text/css" href="{% static 'plugins/admin/css/base.css' %}">#}
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/admin/css/forms.css' %}">
+
+    <script type="text/javascript" src="{% static 'plugins/admin/js/vendor/jquery/jquery.js' %}"></script>
+    <script type="text/javascript" src="{% static 'plugins/admin/js/jquery.init.js' %}"></script>
+    <script type="text/javascript" src="{% static 'plugins/admin/js/core.js' %}"></script>
+    <script type="text/javascript" src="{% static 'plugins/admin/js/inlines.js' %}"></script>
+
+    <script>
+        function validateForm() {
+            if ($("#dbtype_id").val() === "") {
+                alert("请选择DB实例所属类型！");
+                return false;
+            }
+            if ($("#host_id").val() === "") {
+                alert("请选择DB实例服务主机！");
+                return false;
+            }
+            if ($("#serv_port").val() === "") {
+                alert("请输入DB实例服务端口！");
+                return false;
+            }
+            var du_tot = parseInt($('#id_dbuser_set-TOTAL_FORMS').val());
+            var du_pos = parseInt($('#id_dbuser_set-INITIAL_FORMS').val());
+            var uname, upswd;
+            for (; du_pos < du_tot; du_pos++) {
+                uname = $("#id_dbuser_set-" + du_pos + "-username").val();
+                upswd = $("#id_dbuser_set-" + du_pos + "-password").val();
+                if ((uname === "" && upswd != "") || (uname != "" && upswd === "")) {
+                    alert("请补全账号名和账号密码！\n" + uname + " " + upswd);
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        function doSubmit(action_url) {
+            var dbtype_id = $('#dbtype_id').val();
+            var host_id = $('#host_id').val();
+            var serv_port = $('#serv_port').val();
+            var inst_name = $('#inst_name').val();
+
+            var serv_name = $('#serv_name').val();
+            var other_serv_name = $('#other_serv_name').val();
+            var cluster_scanip = $('#cluster_scanip').val();
+            var cluster_port = $('#cluster_port').val();
+
+            var dba_acct_name = $('#dba_acct_name').val();
+            var dba_acct_pswd = $('#dba_acct_pswd').val();
+            var mon_acct_name = $('#mon_acct_name').val();
+            var mon_acct_pswd = $('#mon_acct_pswd').val();
+
+            var sys_pswd = $('#sys_pswd').val();
+            var system_pswd = $('#system_pswd').val();
+            var root_pswd = $('#root_pswd').val();
+
+            var ou_tot = parseInt($('#id_dbuser_set-TOTAL_FORMS').val());
+            var ou_pos = parseInt($('#id_dbuser_set-INITIAL_FORMS').val());
+            var uname, upswd, uremk, dbuser;
+            dbuser = "";
+            for (; ou_pos < ou_tot; ou_pos++) {
+                uname = $("#id_dbuser_set-" + ou_pos + "-username").val();
+                upswd = $("#id_dbuser_set-" + ou_pos + "-password").val();
+                uremk = $("#id_dbuser_set-" + ou_pos + "-remark").val();
+                if (uname != "" && upswd != "") {
+                    dbuser += uname + "/" + upswd + "/" + uremk + "|";
+                }
+            }
+            $.ajax({
+                type: "post",
+                url: action_url,
+                dataType: "json",
+                data: {
+                    dbtype_id: dbtype_id,
+                    host_id: host_id,
+                    serv_port: serv_port,
+                    inst_name: inst_name,
+                    serv_name: serv_name,
+                    other_serv_name: other_serv_name,
+                    cluster_scanip: cluster_scanip,
+                    cluster_port: cluster_port,
+                    dba_acct_name: dba_acct_name,
+                    dba_acct_pswd: dba_acct_pswd,
+                    mon_acct_name: mon_acct_name,
+                    mon_acct_pswd: mon_acct_pswd,
+                    sys_pswd: sys_pswd,
+                    system_pswd: system_pswd,
+                    root_pswd: root_pswd,
+                    dbuser: dbuser,
+                },
+                complete: function () {
+                },
+                success: function (data) {
+                    alert(data.msg);
+                    if (data.status === 0) {
+                        if (action_url === "/host/dbinst/create") {
+                            window.location.href = "/host/dbinst/list/";
+                        } else {
+                            window.location.reload()
+                        }
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    if (XMLHttpRequest.responseJSON) {
+                        alert(XMLHttpRequest.responseText)
+                    } else {
+                        alert(errorThrown);
+                    }
+                }
+            });
+        }
+
+
+        $("#btnCreate").click(function () {
+            if (validateForm()) {
+                doSubmit("/host/dbinst/create/");
+            }
+        });
+
+        $("#btnAddNew").click(function () {
+            if (validateForm()) {
+                doSubmit("/host/dbinst/add/");
+            }
+        });
+
+        $(document).ready(function () {
+            var msg = "{{msg}}";
+            if (msg === "") {
+                $('#msg_modal').modal('hide');
+            } else {
+                $('#msg_modal').modal('show');
+            }
+        });
+
+
+    </script>
+
+
+{% endblock %}
+
+

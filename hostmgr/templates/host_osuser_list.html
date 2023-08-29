@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <!-- 内容 -->
+    <!-- 内容区域 -->
+    <div class="content-wrapper">
+
+        <!-- 内容头部 -->
+        <section class="content-header">
+            <!--
+            <h1>
+                主机管理
+                <small>主机维护</small>
+            </h1>
+            -->
+            <ol class="breadcrumb">
+                <li><a href="/dashboard/"><i class="fa fa-dashboard"></i> 首页</a></li>
+                <li><a href="#">主机管理</a></li>
+                <li class="active">OS账号查询</li>
+            </ol>
+        </section>
+        <!-- 内容头部/ -->
+
+        <!-- 正文区域 -->
+        <section class="content">
+
+            <form id="hostOsUserListForm" name="hostOsUserListForm" method="post" action="/host/osuser/list/">
+                {% csrf_token %}
+                <input id="page" name="page" type="hidden" value="{{ page }}"/>
+
+                <!-- .box-body -->
+                <div class="box box-primary">
+                    <div class="box-body">
+                        <!-- 数据表格 -->
+
+                        <div class="table-box table-responsive">
+                            <!-- 工具栏 -->
+                            <div class="pull-left">
+                                <div class="form-group form-inline">
+                                    <div class="form-group">
+                                        <select id="acct_type_id" name="acct_type_id" class="form-control select2"
+                                                onchange="gotoSubmit(this.form)">
+                                            <option value="">账号类型</option> <!--  selected="selected" -->
+                                            {% for item in acct_type_id %}
+                                                <option value="{{ item.0 }}"
+                                                        {% if item.0 == acct_type_id %}
+                                                        selected="selected"
+                                                        {% endif %}
+                                                >{{ item.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <select id="hosttype_id" name="hosttype_id" class="form-control select2"
+                                                onchange="gotoSubmit(this.form)">
+                                            <option value="">主机类型</option> <!--  selected="selected" -->
+                                            {% for item in hosttype_list %}
+                                                <option value="{{ item.id }}"
+                                                        {% if item.id == hosttype_id %}
+                                                        selected="selected"
+                                                        {% endif %}
+                                                >{{ item.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <select id="hoststat_id" name="hoststat_id" class="form-control select2"
+                                                onchange="gotoSubmit(this.form)">
+                                            <option value="">主机状态</option> <!--  selected="selected" -->
+                                            {% for item in hoststat_list %}
+                                                <option value="{{ item.id }}"
+                                                        {% if item.id == hoststat_id %}
+                                                        selected="selected"
+                                                        {% endif %}
+                                                >{{ item.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <select id="ostype_id" name="ostype_id" class="form-control select2"
+                                                onchange="gotoSubmit(this.form)">
+                                            <option value="">OS类型</option> <!--  selected="selected" -->
+                                            {% for item in ostype_list %}
+                                                <option value="{{ item.id }}"
+                                                >{{ item.osname }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <select id="business_id" name="business_id" class="form-control select2"
+                                                onchange="gotoSubmit(this.form)">
+                                            <option value="">所属业务</option> <!--  selected="selected" -->
+                                            {% for item in business_list %}
+                                                <option value="{{ item.id }}">{{ item.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        &nbsp;&nbsp;
+                                        <button id="filterReset_id" name="filterReset_id"
+                                                class="form-control button-form" onclick="gotoReset(this.form)"> 重置 查询
+                                        </button>
+                                        &nbsp;&nbsp;
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="box-tools pull-right">
+                                <div class="has-feedback">
+                                    <input id="search_keyword" name="search_keyword" type="text" value="" class="form-control input-sm"
+                                           placeholder="搜索">
+                                    <span class="glyphicon glyphicon-search form-control-feedback"></span>
+                                </div>
+                            </div>
+                            <!-- 工具栏/ -->
+
+                            <!-- 数据列表 -->
+                            <table id="dataList" data-toggle="table"
+                                   class="table table-bordered table-striped table-hover dataTable"
+                                   style="table-layout:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+                            >
+                                <thead>
+                                <tr>
+                                    <th>主机ID</th>
+                                    <th>显示名</th>
+                                    <th>主机名</th>
+                                    <th>OS类型</th>
+                                    <th>主机状态</th>
+                                    <th>主机类型</th>
+                                    <th>所属业务</th>
+                                    <th>IP</th>
+                                    <th>SSH端口</th>
+                                    <th>账号类型</th>
+                                    <th>账号名称</th>
+                                    <th>账号密码</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for row in paginator.object_list %}
+                                    <tr>
+                                        <td>{{ row.host_id }}</td>
+                                        <td>{{ row.display }}</td>
+                                        <td>{{ row.hostname }}</td>
+                                        <td>
+                                            {% for item in ostype_list %}
+                                                {% if item.id == row.ostype_id %}
+                                                    {{ item.osname }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {% for item in hoststat_list %}
+                                                {% if item.id == row.hoststat_id %}
+                                                    {{ item.name }}
+                                                {% endif %}
+                                            {% endfor %}
+
+                                        </td>
+                                        <td>
+                                            {% for item in hosttype_list %}
+                                                {% if item.id == row.hosttype_id %}
+                                                    {{ item.name }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {% for item in business_list %}
+                                                {% if item.id == row.business_id %}
+                                                    {{ item.name }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td>{{ row.ipaddr }}</td>
+                                        <td>{{ row.sshport }}</td>
+                                        <td>
+                                            {% for item in accttype_list %}
+                                                {% if item.0 == row.accttype_id %}
+                                                    {{ item.1 }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td>{{ row.username }}</td>
+                                        <td>{{ row.password }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            <!-- 数据列表 -->
+                        </div>
+                        <!-- 数据表格 -->
+
+                    </div>
+                    <!-- .box-body -->
+
+                    <!-- .box-footer -->
+                    <div class="box-footer">
+                        {{ paginator.page_bar_html|safe }}
+                    </div>
+
+                    <!-- /.box-footer -->
+                    <br/><br/>
+
+                </div>
+            </form>
+
+        </section>
+        <!-- 正文区域 /-->
+
+    </div>
+
+
+{% endblock %}
+
+{% block js %}
+
+    <script>
+
+        $(document).ready(function () {
+            $("#per_page").val("{{ paginator.per_page }}");
+            $("#accttype_id").val("{{ param_dict.accttype_id }}");
+            $("#business_id").val("{{ param_dict.business_id }}");
+            $("#hosttype_id").val("{{ param_dict.hosttype_id }}");
+            $("#hoststat_id").val("{{ param_dict.hoststat_id }}");
+            $("#ostype_id").val("{{ param_dict.ostype_id }}");
+            $("#search_keyword").val("{{ param_dict.search_keyword }}");
+        });
+
+        function changePerPage(form, per_page) {
+            $("#per_page").val(per_page);
+            $("#page").val(1);
+            form.submit();
+        }
+
+        function gotoPage(page) {
+            $("#page").val(page);
+            $("#hostOsUserListForm").submit();
+        }
+
+        function gotoSubmit(form) {
+            form.submit();
+        }
+
+        function gotoReset(form) {
+            $("#page").val("1");
+            $("#accttype_id").val('');
+            $("#business_id").val('');
+            $("#hosttype_id").val('');
+            $("#hoststat_id").val('');
+            $("#ostype_id").val('');
+            // $("#search_keyword").val(" ");
+            form.submit();
+        }
+
+        function doSearch(form) {
+            form.submit();
+        }
+
+        $(function () {
+            $('#search_keyword').keypress(function (e) {
+                var curkey = e.which;
+                if (curkey == 13) {
+                    var value = $(this).val().trim();
+                    if (length(value) > 0) {
+                        $(this.form).submit();
+                    }
+                }
+            });
+        });
+
+    </script>
+
+
+{% endblock %}
+
+
