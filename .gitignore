@@ -17,5 +17,4 @@ __pycache__/
 sonar-project.properties
 .scannerwork
 .env
-.env.list
 local_settings.py
