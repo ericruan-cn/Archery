@@ -7,6 +7,7 @@
 archery/settings.py.github
 archery/settings.py.dev
 archery/settings_dev.py
+downloads/
 sql/migrations/
 hostmgr/migrations/
 venv

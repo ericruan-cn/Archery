@@ -67,6 +67,7 @@ python3 manage.py migrate
 #数据初始化
 python3 manage.py dbshell<sql/fixtures/auth_group.sql
 python3 manage.py dbshell<src/init_sql/mysql_slow_query_review.sql
+python3 manage.py dbshell<src/init_sql/hostmgr_conf.sql
 
 #创建管理用户
 python3 manage.py createsuperuser
