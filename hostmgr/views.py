@@ -277,17 +277,15 @@ def show_detail(request, host_id):
 
 
 def osuser_list(request):
-    accttype_id = request.POST.get("accttype_id", "")  # 账号类型, 1:root,2:login_user,3:other_users
+    accttype_id = request.POST.get("accttype_id", "")  # 账号类型, 管理账号(1:root),登录账号(2:login_user), 其它账号(3:other_users)
     hosttype_id = request.POST.get("hosttype_id", "")  # 主机类型
     hoststat_id = request.POST.get("hoststat_id", "")  # 主机状态
     ostype_id = request.POST.get("ostype_id", "")  # 操作系统类型
     business_id = request.POST.get("business_id", "")  # 所属业务
     search_keyword = request.POST.get('search_keyword', '')  # 搜索关键字
 
-    # print('search_keyword =', search_keyword)
-
     filter_dict = dict()
-    # 不能加入到filter_dict中，否则Host.objects.all().filter(**filter_dict)报错!
+
     if ostype_id and len(ostype_id) > 0:
         filter_dict['ostype_id'] = ostype_id
     if business_id and len(business_id) > 0:
@@ -308,7 +306,6 @@ def osuser_list(request):
     result_list = []
     if accttype_id == "1" or accttype_id == '':
         for item in host_records:
-            # print (item.ipaddr, item.hoststat, item.hosttype)
             if item.ostype_id == 91:
                 username = "administrator"
             else:
@@ -349,7 +346,6 @@ def osuser_list(request):
     if accttype_id == "3" or accttype_id == '':
         for item in host_records:
             if item.hostosuser_set:
-                # print(item.hostosuser_set.all())
                 for osu in item.hostosuser_set.all():
                     result_list.append(
                         {'host_id': item.id,
