@@ -20,8 +20,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, ["*"]),
-    #SECRET_KEY=(str, "hfusaf2m4ot#7)fkw#di2bu6(cv0@opwmafx5n#6=3d%x^hpl6"),
-    SECRET_KEY=(str, "hfusaf2m4ot#70fkw#di2bU69cv02opwmafx5n#6=3d%x^HPl6"),
+    SECRET_KEY=(str, "hfusaf2m4ot#7)fkw#di2bu6(cv0@opwmafx5n#6=3d%x^hpl6"),
     DATABASE_URL=(str, "mysql://root:@127.0.0.1:3306/archery"),
     CACHE_URL=(str, "redis://127.0.0.1:6379/0"),
     # 系统外部认证目前支持LDAP、OIDC、DINGDING三种，认证方式只能启用其中一种，如果启用多个，实际生效的只有一个，优先级LDAP > DINGDING > OIDC
@@ -198,12 +197,6 @@ DATABASES = {
     "default": {
         **env.db(),
         **{
-            # 'ENGINE': 'django.db.backends.mysql', # 数据库操作引擎
-            # 'NAME': 'archery',   # 数据库名称
-            # 'USER': 'root',      # 数据库用户
-            # 'PASSWORD': '',      # 数据库密码
-            # 'HOST': '127.0.0.1', # 数据库主机地址
-            # 'PORT': '3306',      # 数据库访问端口
             "DEFAULT_CHARSET": "utf8mb4",
             "CONN_MAX_AGE": 50,
             "OPTIONS": {
